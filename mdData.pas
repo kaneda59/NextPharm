@@ -192,8 +192,8 @@ begin
     Free;
   end;
   cnx_string:= 'Provider=MSDASQL.1;Persist Security Info=False;Extended Properties="Driver={SQLite3 ODBC Driver};' +
-               'Database=[filename];UTF8Encoding=1;StepAPI=0;SyncPragma=NORMAL;NoTXN=0;Timeout=;ShortNames=1;' +
-               'LongNames=1;NoCreat=0;NoWCHAR=0;FKSupport=0;JournalMode=;LoadExt=;"';
+               'Database=[filename];UTF8Encoding=1;StepAPI=0;SyncPragma=NORMAL;NoTXN=0;Timeout=;ShortNames=0;' +
+               'LongNames=0;NoCreat=0;NoWCHAR=0;FKSupport=0;JournalMode=;LoadExt=;"';
   cnx_string:= StringReplace(cnx_string, '[filename]', FileDataBase, [rfReplaceAll]);
   cnxSQL.Close;
   cnxSQL.ConnectionString:= cnx_string;
