@@ -40,6 +40,7 @@ type
     btnPrixWeb: TButton;
     MnuPrixWeb: TMenuItem;
     btnQuery: TButton;
+    cbTakeOldRef: TCheckBox;
     procedure btnGenerateClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure edDataBaseChange(Sender: TObject);
@@ -68,7 +69,7 @@ implementation
 
 {$R *.dfm}
 
-  uses Config, fScript;
+  uses Config, fScript, mdData;
 
     function BoolToStr(const cond: Boolean; const sTrue, sFalse: string): string;
     begin
@@ -166,7 +167,8 @@ begin
       Gauge1.Progress:= 0;
       while (not Eof) and (not Pause) do
       begin
-        if (FieldByName('stkRayon').AsInteger>0) or (cbStockNull.Checked) then
+        if (FieldByName('stkRayon').AsInteger>0) or (cbStockNull.Checked) or
+           (cbTakeOldRef.Checked and Module.FindMedication(FieldByName('Code').AsInteger)) then
         begin
           formatEtiquette:= '0';
           if FieldByName('TypeRemise').AsInteger=3 then
@@ -206,6 +208,9 @@ begin
                               BoolToStr((PrixRemise=0) or
                                         (FieldByName('PrixPublic').AsFloat=PrixRemise), '', DecimalStr(FormatFloat('0.00', PrixRemise))) + ',' +
                               FieldByName('StkRayon').AsString);
+
+          Module.AddMedication(FieldByName('code').AsInteger,
+                               FieldByName('LibF').AsString);
         end;
         Gauge1.Progress:= Gauge1.Progress + 1;
         LblPos.Caption:= intToStr(RecNo) + '/' + intToStr(RecordCount);
@@ -306,6 +311,8 @@ begin
   if file_auto and (edDataBase.Text<>'') and (edDestination.Text<>'') then btnGenerate.Click;
   if web_auto  and (edDataBase.Text<>'') and (edDestination.Text<>'') then  btnPrixWeb.Click;
 
+  if not Module.PrepareConnection then
+    MessageDLG('impossible de se connecter à la base de données locale d''historisation', mtError, [mbOk], 0);
 end;
 
 procedure TForMainM2COMM.FormShow(Sender: TObject);

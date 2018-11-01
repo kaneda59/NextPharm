@@ -165,6 +165,17 @@ object ForMainM2COMM: TForMainM2COMM
     Caption = 'Prendre les stocks '#224' 0'
     TabOrder = 5
   end
+  object cbTakeOldRef: TCheckBox
+    Left = 272
+    Top = 152
+    Width = 193
+    Height = 17
+    Cursor = crHandPoint
+    Caption = 'Prendre les anciennes r'#233'f'#233'rences'
+    Checked = True
+    State = cbChecked
+    TabOrder = 6
+  end
   object Database1: TADOConnection
     ConnectionString = 
       'Provider=PCSoft.HFSQL;Initial Catalog=D:\Application\NextPharm\S' +
@@ -180,16 +191,16 @@ object ForMainM2COMM: TForMainM2COMM
     PopupMenu = PopupMenu1
     Visible = True
     OnDblClick = TrayIcon1DblClick
-    Left = 368
-    Top = 152
+    Left = 352
+    Top = 24
   end
   object ImageList1: TImageList
     Height = 32
     Width = 32
-    Left = 240
-    Top = 120
+    Left = 248
+    Top = 40
     Bitmap = {
-      494C010101000800400020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800440020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -725,8 +736,8 @@ object ForMainM2COMM: TForMainM2COMM
       000000000000}
   end
   object PopupMenu1: TPopupMenu
-    Left = 400
-    Top = 88
+    Left = 416
+    Top = 8
     object MnuGenerate: TMenuItem
       Caption = '&G'#233'n'#233'rer le fichier des '#233'tiquettes'
       OnClick = btnGenerateClick

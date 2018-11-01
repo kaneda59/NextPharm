@@ -16,7 +16,7 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.ShowMainForm := False;
   TStyleManager.TrySetStyle('Smokey Quartz Kamri');
-  Application.CreateForm(TForMainM2COMM, ForMainM2COMM);
   Application.CreateForm(TModule, Module);
+  Application.CreateForm(TForMainM2COMM, ForMainM2COMM);
   Application.Run;
 end.
