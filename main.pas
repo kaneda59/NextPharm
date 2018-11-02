@@ -268,6 +268,7 @@ begin
       Gauge1.Progress:= Gauge1.Progress + 1;
       Application.ProcessMessages;
     end;
+
     ShowMessage('importation terminée');
     Gauge1.Progress:= 0;
   finally

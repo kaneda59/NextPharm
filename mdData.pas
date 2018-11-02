@@ -150,6 +150,7 @@ begin
         begin
           if assigned(gg) then gg.Progress:= gg.Progress + 1;
           Application.processMessages;
+
           continue;
         end
         else Inc(nb);

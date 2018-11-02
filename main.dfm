@@ -167,7 +167,7 @@ object ForMainM2COMM: TForMainM2COMM
     OnChange = edDataBaseChange
   end
   object cbStockNull: TCheckBox
-    Left = 329
+    Left = 332
     Top = 153
     Width = 129
     Height = 17
