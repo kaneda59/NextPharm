@@ -3,7 +3,7 @@ object ForMainM2COMM: TForMainM2COMM
   Top = 0
   BorderStyle = bsToolWindow
   Caption = 'NextPharm --> M2COMM'
-  ClientHeight = 203
+  ClientHeight = 222
   ClientWidth = 568
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,6 +16,7 @@ object ForMainM2COMM: TForMainM2COMM
   Position = poDesigned
   OnClose = FormClose
   OnCreate = FormCreate
+  OnMouseDown = FormMouseDown
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -57,6 +58,13 @@ object ForMainM2COMM: TForMainM2COMM
     Cursor = crHandPoint
     Caption = '...'
     OnClick = SpeedButton2Click
+  end
+  object Gauge2: TGauge
+    Left = 112
+    Top = 176
+    Width = 176
+    Height = 14
+    Progress = 0
   end
   object Panel1: TPanel
     Left = 0
@@ -111,11 +119,12 @@ object ForMainM2COMM: TForMainM2COMM
   end
   object Panel2: TPanel
     Left = 0
-    Top = 181
+    Top = 200
     Width = 568
     Height = 22
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 181
     object Gauge1: TGauge
       Left = 1
       Top = 1
@@ -158,16 +167,17 @@ object ForMainM2COMM: TForMainM2COMM
     OnChange = edDataBaseChange
   end
   object cbStockNull: TCheckBox
-    Left = 112
-    Top = 152
+    Left = 329
+    Top = 153
     Width = 129
     Height = 17
     Caption = 'Prendre les stocks '#224' 0'
     TabOrder = 5
+    Visible = False
   end
   object cbTakeOldRef: TCheckBox
-    Left = 272
-    Top = 152
+    Left = 112
+    Top = 153
     Width = 193
     Height = 17
     Cursor = crHandPoint
@@ -175,6 +185,17 @@ object ForMainM2COMM: TForMainM2COMM
     Checked = True
     State = cbChecked
     TabOrder = 6
+  end
+  object btnHistorisation: TButton
+    Left = 294
+    Top = 149
+    Width = 23
+    Height = 25
+    Cursor = crHandPoint
+    Hint = 'Int'#233'grer d'#39'anciens fichiers '#224' l'#39'historique'
+    Caption = '...'
+    TabOrder = 7
+    OnClick = btnHistorisationClick
   end
   object Database1: TADOConnection
     ConnectionString = 
@@ -200,7 +221,7 @@ object ForMainM2COMM: TForMainM2COMM
     Left = 248
     Top = 40
     Bitmap = {
-      494C010101000800440020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800480020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

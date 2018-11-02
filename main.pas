@@ -41,6 +41,8 @@ type
     MnuPrixWeb: TMenuItem;
     btnQuery: TButton;
     cbTakeOldRef: TCheckBox;
+    btnHistorisation: TButton;
+    Gauge2: TGauge;
     procedure btnGenerateClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure edDataBaseChange(Sender: TObject);
@@ -53,6 +55,9 @@ type
     procedure FormShow(Sender: TObject);
     procedure btnPrixWebClick(Sender: TObject);
     procedure btnQueryClick(Sender: TObject);
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure btnHistorisationClick(Sender: TObject);
   private
     { Déclarations privées }
     Pause: Boolean;
@@ -243,6 +248,33 @@ begin
   if file_auto and (not web_auto) then Application.Terminate;
 end;
 
+procedure TForMainM2COMM.btnHistorisationClick(Sender: TObject);
+var i: integer;
+begin
+  with TOpenDialog.Create(nil) do
+  try
+    Filter:= 'CSV Files (*.csv)|*.csv|All files (*.*)|*.*';
+    Options:= Options + [ofAllowMultiSelect];
+    InitialDir:= edDestination.Text;
+    if Execute then
+    if MessageDLG('Voulez-vous importer les références non connues de ce(s) fichier(s) ?',
+                  mtConfirmation, [mbYes, mbNo], 0)=mrYes then
+    Gauge1.MinValue:= 0;
+    Gauge1.MaxValue:= Files.Count;
+    Gauge1.Progress:= 0;
+    for i := 0 to Files.Count-1 do
+    begin
+      Module.ImportCSVFile(Files[i], Gauge2);
+      Gauge1.Progress:= Gauge1.Progress + 1;
+      Application.ProcessMessages;
+    end;
+    ShowMessage('importation terminée');
+    Gauge1.Progress:= 0;
+  finally
+    Free;
+  end;
+end;
+
 procedure TForMainM2COMM.btnPauseClick(Sender: TObject);
 begin
   if MessageDLG('Voulez-vous stopper la génération du fichier ?', mtConfirmation, [mbYes, mbNo], 0)=mrYes then
@@ -313,6 +345,13 @@ begin
 
   if not Module.PrepareConnection then
     MessageDLG('impossible de se connecter à la base de données locale d''historisation', mtError, [mbOk], 0);
+end;
+
+procedure TForMainM2COMM.FormMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if (ssAlt in Shift) and (ssCTRL in Shift) then
+    cbStockNull.Visible:= True;
 end;
 
 procedure TForMainM2COMM.FormShow(Sender: TObject);

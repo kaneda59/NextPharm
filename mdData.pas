@@ -3,25 +3,36 @@ unit mdData;
 interface
 
 uses
-  Windows, System.SysUtils, System.Classes, Data.DB, Data.Win.ADODB;
+  Forms, Windows, System.SysUtils, System.Classes, Data.DB, Data.Win.ADODB,
+  vcl.Samples.Gauges;
 
 type
+  TProductInfo = record
+    cnk: string;
+    libf: string;
+  end;
+
   TModule = class(TDataModule)
     cnxSQL: TADOConnection;
+    procedure DataModuleCreate(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);
   private
     { Déclarations privées }
+    FProd: TStringList;
     procedure PrepareDataBase;
     function TableExists(const TableName: string): Boolean;
     function ColumnExists(const TableName, ColumnName: string): Boolean;
     procedure CheckField(const TableName, FieldName, script: string);
     procedure CreateTable(q: TAdoQuery; const TableName: string);
     function FindField(const TableName_, FieldName_: string): Boolean;
+    function getProductInformation(const value: string): TProductInfo;
   public
     { Déclarations publiques }
     function PrepareConnection: Boolean;
     function AddSQLQuery: TADoQuery;
     function FindMedication(const cnk: integer): Boolean;
-    procedure AddMedication(const cnk: integer; const libF: string);
+    function AddMedication(const cnk: integer; const libF: string): Boolean;
+    function ImportCSVFile(const FileName: string; const gg: TGauge = nil): Boolean;
   end;
 
 var
@@ -95,6 +106,65 @@ begin
   end;
 end;
 
+function TModule.getProductInformation(const value: string): TProductInfo;
+var i: integer;
+begin
+  FillChar(result, SizeOf(result), 0);
+  FProd.DelimitedText:= Value;
+  if FProd.Count>0 then
+  begin
+    if FProd.Count>1 then result.cnk:= FProd[1];
+    if FProd.Count>4 then result.libf:= FProd[4];
+  end;
+end;
+
+function TModule.ImportCSVFile(const FileName: string; const gg: TGauge = nil): Boolean;
+var i: integer;
+    cnks: TStringList;
+    pf: TProductInfo;
+    nb: integer;
+begin
+  result:= False;
+  if FileExists(FileName) then
+  begin
+    cnks:= TStringList.Create;
+    with TStringList.Create do
+    try
+      LoadFromFile(FileName);
+      for i := 0 to Count-1 do
+      begin
+        pf:= getProductInformation(Strings[i]);
+        if (pf.cnk<>'') and (cnks.IndexOfName(pf.cnk)<0) then
+          cnks.Add(pf.cnk + '=' + pf.libf);
+      end;
+      nb:= 0;
+      if assigned(gg) then
+      begin
+        gg.MinValue:= 0;
+        gg.MaxValue:= cnks.Count;
+        gg.Progress:= 0;
+      end;
+      for i := 0 to cnks.Count-1 do
+      begin
+        if not AddMedication(strToInt(cnks.Names[i]), cnks.Values[cnks.Names[i]]) then
+        begin
+          if assigned(gg) then gg.Progress:= gg.Progress + 1;
+          Application.processMessages;
+          continue;
+        end
+        else Inc(nb);
+        if assigned(gg) then gg.Progress:= gg.Progress + 1;
+        Application.processMessages;
+      end;
+      if assigned(gg) then gg.Progress:= 0;
+    finally
+      Free;
+      FreeAndNil(cnks);
+    end;
+    result:= nb>0;
+  end;
+end;
+
 procedure TModule.CreateTable(q: TAdoQuery; const TableName: string);
 begin
   try
@@ -103,6 +173,18 @@ begin
     on E: Exception do
       outputdebugstring(Pchar('Erreur lors de la création de la table ' + TableName + ' : ' + E.Message));
   end;
+end;
+
+procedure TModule.DataModuleCreate(Sender: TObject);
+begin
+  FProd:= TStringList.create;
+  FProd.StrictDelimiter:= True;
+  FProd.Delimiter:= ',';
+end;
+
+procedure TModule.DataModuleDestroy(Sender: TObject);
+begin
+  FreeAndNil(FProd);
 end;
 
 procedure TModule.CheckField(const TableName, FieldName: string; const script: string);
@@ -145,9 +227,10 @@ begin
   end;
 end;
 
-procedure TModule.AddMedication(const cnk: integer; const libF: string);
+function TModule.AddMedication(const cnk: integer; const libF: string): Boolean;
 var Lb: string;
 begin
+  result:= False;
   if not FindMedication(cnk) then
   with AddSQLQuery do
   try
@@ -160,6 +243,7 @@ begin
     SQL.Add('(' + intToStr(cnk) + ', ' + QuotedStr(Lb) + ')');
     try
       ExecSQL;
+      Result:= True;
     except
       on E: Exception do
         outputdebugstring(pchar('erreur lors de l''ajout : ' + intToStr(cnk) + ' = ' + e.Message));
