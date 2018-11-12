@@ -19,17 +19,8 @@ type
     btnGenerate: TButton;
     Panel2: TPanel;
     Gauge1: TGauge;
-    edFormatFileName: TEdit;
-    Label1: TLabel;
     LblPos: TLabel;
-    edDestination: TEdit;
-    Label3: TLabel;
-    Label4: TLabel;
-    edDataBase: TEdit;
-    SpeedButton1: TSpeedButton;
-    SpeedButton2: TSpeedButton;
     btnPause: TButton;
-    cbStockNull: TCheckBox;
     TrayIcon1: TTrayIcon;
     ImageList1: TImageList;
     PopupMenu1: TPopupMenu;
@@ -39,13 +30,23 @@ type
     MnuClose: TMenuItem;
     btnPrixWeb: TButton;
     MnuPrixWeb: TMenuItem;
-    cbTakeOldRef: TCheckBox;
-    btnHistorisation: TButton;
-    Gauge2: TGauge;
+    pnl1: TPanel;
     btnQuery: TButton;
     chkMajPxWeb: TCheckBox;
-    Label2: TLabel;
+    cbStockNull: TCheckBox;
+    btnHistorisation: TButton;
+    cbTakeOldRef: TCheckBox;
+    Gauge2: TGauge;
     edDestPrixWeb: TEdit;
+    Label2: TLabel;
+    Label3: TLabel;
+    edDestination: TEdit;
+    Label1: TLabel;
+    edFormatFileName: TEdit;
+    edDataBase: TEdit;
+    Label4: TLabel;
+    SpeedButton1: TSpeedButton;
+    SpeedButton2: TSpeedButton;
     spbDestPrixWeb: TSpeedButton;
     procedure btnGenerateClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -63,6 +64,8 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure btnHistorisationClick(Sender: TObject);
     procedure spbDestPrixWebClick(Sender: TObject);
+    procedure Panel1MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     { Déclarations privées }
     Pause: Boolean;
@@ -216,27 +219,6 @@ begin
           else if FieldByName('TypeRemise').AsInteger=5 then
                  formatEtiquette:= '3';
 
-          if FieldByName('PromoPCT').AsFloat<>0 then
-          begin
-            PrixRemise:= FieldByName('PromoPCT').AsFloat;
-            if FieldByName('PromoPCT').AsFloat>10 then
-              formatEtiquette:= '3';
-            if FieldByName('PromoPCT').AsFloat<=10 then
-              formatEtiquette:= '4';
-          end
-          else
-          if FieldByName('MontantPromo').AsFloat<>0 then
-          begin
-            PrixRemise:= FieldByName('MontantPromo').AsFloat;
-//            if FieldByName('PromoPCT').AsFloat<>0 then
-//            begin
-//              if FieldByName('PromoPCT').AsFloat>10 then
-//                formatEtiquette:= '3';
-//              if FieldByName('PromoPCT').AsFloat<=10 then
-//                formatEtiquette:= '4';
-//            end;
-          end
-          else
           begin
             if FieldByName('TypeRemise').AsInteger=3 then
               PrixRemise:= FieldByName('remisePCT').AsFloat
@@ -244,6 +226,44 @@ begin
             if FieldByName('TypeRemise').AsInteger=5 then
               PrixRemise:= FieldByName('RemisePx').AsFloat
             else PrixRemise:= 0;
+          end;
+
+          if  ( // test de la date de promo
+               varIsNull(FieldByName('DateDébutPromo').Value) or
+               (
+                (FieldByName('DateDébutPromo').AsDateTime>=Date) and
+                (FieldByName('DateFinPromo').AsDateTime<=Date)
+               )
+              ) or
+              ( // test des qtés min/max
+                (FieldByName('QtRestantePromo').AsInteger>0)
+              )
+          then
+          begin
+            OutputDebugString(pchar('on test si promo : ' + FieldByName('Code').AsString));
+            if FieldByName('PromoPCT').AsFloat<>0 then
+            begin
+              OutputDebugString(pchar('promo en %'));
+              PrixRemise:= FieldByName('PromoPCT').AsFloat;
+              if FieldByName('PromoPCT').AsFloat>10 then
+                formatEtiquette:= '3';
+              if FieldByName('PromoPCT').AsFloat<=10 then
+                formatEtiquette:= '4';
+            end
+            else
+            if FieldByName('MontantPromo').AsFloat<>0 then
+            begin
+              OutputDebugString(pchar('promo en montant'));
+              PrixRemise:= FieldByName('MontantPromo').AsFloat;
+  //            if FieldByName('PromoPCT').AsFloat<>0 then
+  //            begin
+  //              if FieldByName('PromoPCT').AsFloat>10 then
+  //                formatEtiquette:= '3';
+  //              if FieldByName('PromoPCT').AsFloat<=10 then
+  //                formatEtiquette:= '4';
+  //            end;
+            end
+            else outputdebugstring('aucune promo pour ce produit');
           end;
 
           (*  Fichier MAJ WEB
@@ -369,25 +389,26 @@ end;
 
 procedure TForMainM2COMM.btnPrixWebClick(Sender: TObject);
 begin
-  with TAdoQuery.Create(nil) do
-  try
-    Database1.Close;
-    DataBase1.ConnectionString:= Format(CNX_STRING, [edDatabase.Text]);
-    Connection:= Database1;
-    SQL.Add('UPDATE tarSpe SET PrixWeb=Round(PrixPublic-((PrixPublic*RemisePC)/100), 2)');
-    SQL.Add('WHERE RemisePC>0');
-    try
-      ExecSQL;
-      if not web_auto then MessageDLG('Les prix Web ont été mis à jour', mtConfirmation, [mbYes], 0);
-    except
-      on E: Exception do
-        if not web_auto then MessageDLG('Impossible de mettre à jour les prix Web : ' + e.Message,
-                   mtError, [mbYes], 0);
-    end;
-  finally
-    Free;
-  end;
-  if web_auto then Application.Terminate;
+  chkMajPxWeb.Checked:= True;
+//  with TAdoQuery.Create(nil) do
+//  try
+//    Database1.Close;
+//    DataBase1.ConnectionString:= Format(CNX_STRING, [edDatabase.Text]);
+//    Connection:= Database1;
+//    SQL.Add('UPDATE tarSpe SET PrixWeb=Round(PrixPublic-((PrixPublic*RemisePC)/100), 2)');
+//    SQL.Add('WHERE RemisePC>0');
+//    try
+//      ExecSQL;
+//      if not web_auto then MessageDLG('Les prix Web ont été mis à jour', mtConfirmation, [mbYes], 0);
+//    except
+//      on E: Exception do
+//        if not web_auto then MessageDLG('Impossible de mettre à jour les prix Web : ' + e.Message,
+//                   mtError, [mbYes], 0);
+//    end;
+//  finally
+//    Free;
+//  end;
+//  if web_auto then Application.Terminate;
 end;
 
 procedure TForMainM2COMM.btnQueryClick(Sender: TObject);
@@ -415,6 +436,7 @@ end;
 
 procedure TForMainM2COMM.FormCreate(Sender: TObject);
 begin
+  Height:= 90;
   edDataBase.Text      := v_config.DataBaseFolder;
   edDestination.Text   := v_config.DestinationFolder;
   edDestPrixWeb.Text   := v_config.DestinationFolderWeb;
@@ -449,6 +471,17 @@ end;
 procedure TForMainM2COMM.MnuCloseClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TForMainM2COMM.Panel1MouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if ssCtrl in SHIFT then
+  begin
+    pnl1.Visible:= True;
+    Height:= 291;
+    Top   := Screen.Height - Height - 32;
+  end;
 end;
 
 procedure TForMainM2COMM.spbDestPrixWebClick(Sender: TObject);

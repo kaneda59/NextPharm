@@ -20,68 +20,6 @@ object ForMainM2COMM: TForMainM2COMM
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TLabel
-    Left = 8
-    Top = 93
-    Width = 81
-    Height = 13
-    Caption = 'Format du fichier'
-  end
-  object Label3: TLabel
-    Left = 8
-    Top = 125
-    Width = 54
-    Height = 13
-    Caption = 'Destination'
-  end
-  object Label4: TLabel
-    Left = 8
-    Top = 57
-    Width = 82
-    Height = 13
-    Caption = 'Base de donn'#233'es'
-  end
-  object SpeedButton1: TSpeedButton
-    Left = 536
-    Top = 53
-    Width = 23
-    Height = 22
-    Cursor = crHandPoint
-    Caption = '...'
-    OnClick = SpeedButton1Click
-  end
-  object SpeedButton2: TSpeedButton
-    Left = 536
-    Top = 121
-    Width = 23
-    Height = 22
-    Cursor = crHandPoint
-    Caption = '...'
-    OnClick = SpeedButton2Click
-  end
-  object Gauge2: TGauge
-    Left = 112
-    Top = 208
-    Width = 176
-    Height = 14
-    Progress = 0
-  end
-  object Label2: TLabel
-    Left = 8
-    Top = 157
-    Width = 98
-    Height = 13
-    Caption = 'Destination prix web'
-  end
-  object spbDestPrixWeb: TSpeedButton
-    Left = 536
-    Top = 153
-    Width = 23
-    Height = 22
-    Cursor = crHandPoint
-    Caption = '...'
-    OnClick = spbDestPrixWebClick
-  end
   object Panel1: TPanel
     Left = 0
     Top = 0
@@ -89,6 +27,7 @@ object ForMainM2COMM: TForMainM2COMM
     Height = 41
     Align = alTop
     TabOrder = 0
+    OnMouseDown = Panel1MouseDown
     object btnGenerate: TButton
       Left = 4
       Top = 7
@@ -119,7 +58,6 @@ object ForMainM2COMM: TForMainM2COMM
       Cursor = crHandPoint
       Caption = 'Mise '#224' jour des Prix Web'
       TabOrder = 2
-      Visible = False
       OnClick = btnPrixWebClick
     end
   end
@@ -146,90 +84,165 @@ object ForMainM2COMM: TForMainM2COMM
       Caption = '0/0'
     end
   end
-  object edFormatFileName: TEdit
-    Left = 112
-    Top = 90
-    Width = 425
-    Height = 21
-    TabOrder = 3
-    Text = 'products-%YYYYMMDD%-%HHNN%(Enregistr'#233' automatiquement).csv'
-    OnChange = edDataBaseChange
-  end
-  object edDestination: TEdit
-    Left = 112
-    Top = 122
-    Width = 425
-    Height = 21
-    TabOrder = 4
-    OnChange = edDataBaseChange
-  end
-  object edDataBase: TEdit
-    Left = 112
-    Top = 54
-    Width = 425
-    Height = 21
+  object pnl1: TPanel
+    Left = 0
+    Top = 41
+    Width = 568
+    Height = 199
+    Align = alClient
     TabOrder = 2
-    OnChange = edDataBaseChange
-  end
-  object cbStockNull: TCheckBox
-    Left = 332
-    Top = 185
-    Width = 129
-    Height = 17
-    Caption = 'Prendre les stocks '#224' 0'
-    TabOrder = 7
     Visible = False
-  end
-  object cbTakeOldRef: TCheckBox
-    Left = 112
-    Top = 185
-    Width = 193
-    Height = 17
-    Cursor = crHandPoint
-    Caption = 'Prendre les anciennes r'#233'f'#233'rences'
-    Checked = True
-    State = cbChecked
-    TabOrder = 6
-  end
-  object btnHistorisation: TButton
-    Left = 294
-    Top = 181
-    Width = 23
-    Height = 25
-    Cursor = crHandPoint
-    Hint = 'Int'#233'grer d'#39'anciens fichiers '#224' l'#39'historique'
-    Caption = '...'
-    TabOrder = 9
-    OnClick = btnHistorisationClick
-  end
-  object btnQuery: TButton
-    Left = 484
-    Top = 197
-    Width = 75
-    Height = 25
-    Cursor = crHandPoint
-    Caption = 'Query'
-    Enabled = False
-    TabOrder = 10
-    OnClick = btnQueryClick
-  end
-  object chkMajPxWeb: TCheckBox
-    Left = 332
-    Top = 201
-    Width = 146
-    Height = 17
-    Caption = 'Mettre '#224' jour les prix web'
-    Checked = True
-    State = cbChecked
-    TabOrder = 8
-  end
-  object edDestPrixWeb: TEdit
-    Left = 112
-    Top = 154
-    Width = 425
-    Height = 21
-    TabOrder = 5
-    OnChange = edDataBaseChange
+    ExplicitLeft = 144
+    ExplicitTop = 80
+    ExplicitWidth = 185
+    ExplicitHeight = 41
+    object Gauge2: TGauge
+      Left = 112
+      Top = 170
+      Width = 176
+      Height = 14
+      Progress = 0
+    end
+    object Label2: TLabel
+      Left = 8
+      Top = 117
+      Width = 98
+      Height = 13
+      Caption = 'Destination prix web'
+    end
+    object Label3: TLabel
+      Left = 8
+      Top = 85
+      Width = 54
+      Height = 13
+      Caption = 'Destination'
+    end
+    object Label1: TLabel
+      Left = 8
+      Top = 53
+      Width = 81
+      Height = 13
+      Caption = 'Format du fichier'
+    end
+    object Label4: TLabel
+      Left = 8
+      Top = 17
+      Width = 82
+      Height = 13
+      Caption = 'Base de donn'#233'es'
+    end
+    object SpeedButton1: TSpeedButton
+      Left = 536
+      Top = 13
+      Width = 23
+      Height = 22
+      Cursor = crHandPoint
+      Caption = '...'
+      OnClick = SpeedButton1Click
+    end
+    object SpeedButton2: TSpeedButton
+      Left = 536
+      Top = 81
+      Width = 23
+      Height = 22
+      Cursor = crHandPoint
+      Caption = '...'
+      OnClick = SpeedButton2Click
+    end
+    object spbDestPrixWeb: TSpeedButton
+      Left = 536
+      Top = 113
+      Width = 23
+      Height = 22
+      Cursor = crHandPoint
+      Caption = '...'
+      OnClick = spbDestPrixWebClick
+    end
+    object btnQuery: TButton
+      Left = 484
+      Top = 158
+      Width = 75
+      Height = 25
+      Cursor = crHandPoint
+      Caption = 'Query'
+      Enabled = False
+      TabOrder = 0
+      OnClick = btnQueryClick
+    end
+    object chkMajPxWeb: TCheckBox
+      Left = 332
+      Top = 142
+      Width = 146
+      Height = 17
+      Caption = 'Mettre '#224' jour les prix web'
+      Checked = True
+      State = cbChecked
+      TabOrder = 1
+    end
+    object cbStockNull: TCheckBox
+      Left = 332
+      Top = 165
+      Width = 129
+      Height = 17
+      Caption = 'Prendre les stocks '#224' 0'
+      TabOrder = 2
+      Visible = False
+    end
+    object btnHistorisation: TButton
+      Left = 293
+      Top = 140
+      Width = 23
+      Height = 25
+      Cursor = crHandPoint
+      Hint = 'Int'#233'grer d'#39'anciens fichiers '#224' l'#39'historique'
+      Caption = '...'
+      TabOrder = 3
+      OnClick = btnHistorisationClick
+    end
+    object cbTakeOldRef: TCheckBox
+      Left = 112
+      Top = 144
+      Width = 176
+      Height = 17
+      Cursor = crHandPoint
+      Caption = 'Prendre les anciennes r'#233'f'#233'rences'
+      Checked = True
+      State = cbChecked
+      TabOrder = 4
+    end
+    object edDestPrixWeb: TEdit
+      Left = 112
+      Top = 114
+      Width = 422
+      Height = 21
+      TabOrder = 5
+      OnChange = edDataBaseChange
+    end
+    object edDestination: TEdit
+      Left = 112
+      Top = 82
+      Width = 422
+      Height = 21
+      TabOrder = 6
+      OnChange = edDataBaseChange
+    end
+    object edFormatFileName: TEdit
+      Left = 112
+      Top = 50
+      Width = 422
+      Height = 21
+      TabOrder = 7
+      Text = 'products-%YYYYMMDD%-%HHNN%(Enregistr'#233' automatiquement).csv'
+      OnChange = edDataBaseChange
+    end
+    object edDataBase: TEdit
+      Left = 112
+      Top = 14
+      Width = 422
+      Height = 21
+      TabOrder = 8
+      OnChange = edDataBaseChange
+    end
   end
   object Database1: TADOConnection
     ConnectionString = 
@@ -255,7 +268,7 @@ object ForMainM2COMM: TForMainM2COMM
     Left = 248
     Top = 40
     Bitmap = {
-      494C010101000800540020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010008005C0020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
