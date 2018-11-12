@@ -39,10 +39,14 @@ type
     MnuClose: TMenuItem;
     btnPrixWeb: TButton;
     MnuPrixWeb: TMenuItem;
-    btnQuery: TButton;
     cbTakeOldRef: TCheckBox;
     btnHistorisation: TButton;
     Gauge2: TGauge;
+    btnQuery: TButton;
+    chkMajPxWeb: TCheckBox;
+    Label2: TLabel;
+    edDestPrixWeb: TEdit;
+    spbDestPrixWeb: TSpeedButton;
     procedure btnGenerateClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure edDataBaseChange(Sender: TObject);
@@ -58,6 +62,7 @@ type
     procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure btnHistorisationClick(Sender: TObject);
+    procedure spbDestPrixWebClick(Sender: TObject);
   private
     { Déclarations privées }
     Pause: Boolean;
@@ -135,7 +140,9 @@ implementation
 
 procedure TForMainM2COMM.btnGenerateClick(Sender: TObject);
 var Fichier: TStringList;
+    FichierWeb: TStringList;
     FileName: string;
+    FileNameWeb: string;
     FormatEtiquette: string;
 
     PrixRemise: double;
@@ -144,6 +151,12 @@ var Fichier: TStringList;
     begin
       result:= value;
       result:= StringReplace(result, ',', '.', [rfReplaceall]);
+    end;
+
+    procedure AddWebInfo(const value: string);
+    begin
+      if chkMajPxWeb.Checked then
+         FichierWeb.Add(value);
     end;
 
 begin
@@ -156,16 +169,30 @@ begin
     MnuGenerate.Enabled:= False;
     MnuClose.Enabled:= False;
     Fichier:= TStringList.Create;
+    if chkMajPxWeb.checked then
+      FichierWeb:= TStringList.Create;
     with TAdoQuery.Create(nil) do
     try
       Database1.Close;
       DataBase1.ConnectionString:= Format(CNX_STRING, [edDatabase.Text]);
       Connection:= Database1;
-      SQL.Add('SELECT t.CNK as code,LibF,PrixPublic,PrixPublic-((PrixPublic*RemisePC)/100) as remisePCT,');
-      SQL.Add('       (PrixPublic-RemisePC) as RemisePx, TypeRemise, st.StkRayon, st.stkCave, g.CodeBarre, RemisePC');
-      SQL.Add('FROM tarSpe t LEFT OUTER JOIN AutresCodesBarresSpe g on g.cnk=t.cnk LEFT OUTER JOIN stock st');
-      SQL.Add('ON st.cnk=t.cnk');
+      SQL.Add('SELECT t.CNK as code,LibF,LibN,PrixPublic,PrixPublic-((PrixPublic*RemisePC)/100) as remisePCT,');
+      SQL.Add('       (PrixPublic-RemisePC) as RemisePx, PrixAchat, TypeRemise, st.StkRayon, st.stkCave, g.CodeBarre, RemisePC,');
+      SQL.Add('       t.catAPBProd, t.Legislation, t.TempConservation, t.CodeLabo, t.pcTVA, t.Usage,');
+      SQL.Add('       pe.DateDébutPromo, pe.DateFinPromo, pe.QtTotalePromo, pe.QtRestantePromo,');
+      SQL.Add('       PrixPublic-((PrixPublic*pe.PCPromo)/100) as PromoPCT, pe.MontantPromo');
+      SQL.Add('FROM tarSpe t LEFT OUTER JOIN AutresCodesBarresSpe g on g.cnk=t.cnk');
+      SQL.Add('              LEFT OUTER JOIN stock st ON st.cnk=t.cnk');
+      SQL.Add('              LEFT OUTER JOIN PromoDetail pd ON pd.valeur=t.cnk');
+      SQL.Add('              LEFt OUTER JOIN PromoEntete pe ON pe.idPromoEntete=pd.idPromoEntete');
       SQL.Add('WHERE PrixPublic>0');
+//      SQL.Add('SELECT t.CNK as code,LibF,PrixPublic,PrixPublic-((PrixPublic*RemisePC)/100) as remisePCT,');
+//      SQL.Add('       (PrixPublic-RemisePC) as RemisePx, TypeRemise, st.StkRayon, st.stkCave, g.CodeBarre, RemisePC,');
+//      SQL.Add('       t.catAPBProd, t.Legislation, t.TempConservation, t.CodeLabo, t.pcTVA, t.Usage, ');
+//      SQL.Add('FROM tarSpe t LEFT OUTER JOIN AutresCodesBarresSpe g on g.cnk=t.cnk');
+//      SQL.Add('              LEFT OUTER JOIN stock st');
+//      SQL.Add('ON st.cnk=t.cnk');
+//      SQL.Add('WHERE PrixPublic>0');
       Open;
       Gauge1.MaxValue:= RecordCount;
       Gauge1.MinValue:= 0;
@@ -189,12 +216,57 @@ begin
           else if FieldByName('TypeRemise').AsInteger=5 then
                  formatEtiquette:= '3';
 
-          if FieldByName('TypeRemise').AsInteger=3 then
-            PrixRemise:= FieldByName('remisePCT').AsFloat
+          if FieldByName('PromoPCT').AsFloat<>0 then
+          begin
+            PrixRemise:= FieldByName('PromoPCT').AsFloat;
+            if FieldByName('PromoPCT').AsFloat>10 then
+              formatEtiquette:= '3';
+            if FieldByName('PromoPCT').AsFloat<=10 then
+              formatEtiquette:= '4';
+          end
           else
-          if FieldByName('TypeRemise').AsInteger=5 then
-            PrixRemise:= FieldByName('RemisePx').AsFloat
-          else PrixRemise:= 0;
+          if FieldByName('MontantPromo').AsFloat<>0 then
+          begin
+            PrixRemise:= FieldByName('MontantPromo').AsFloat;
+//            if FieldByName('PromoPCT').AsFloat<>0 then
+//            begin
+//              if FieldByName('PromoPCT').AsFloat>10 then
+//                formatEtiquette:= '3';
+//              if FieldByName('PromoPCT').AsFloat<=10 then
+//                formatEtiquette:= '4';
+//            end;
+          end
+          else
+          begin
+            if FieldByName('TypeRemise').AsInteger=3 then
+              PrixRemise:= FieldByName('remisePCT').AsFloat
+            else
+            if FieldByName('TypeRemise').AsInteger=5 then
+              PrixRemise:= FieldByName('RemisePx').AsFloat
+            else PrixRemise:= 0;
+          end;
+
+          (*  Fichier MAJ WEB
+          Cnk ; libellé F ; libellé N ; Catégorie APB ; Code législation ; Prix public (TvaC)
+          ; Prix Achat (Htva) ; Code T° de conservation ; Code Labo ; Nom labo
+          ; % TVA ; Code de ventilation ; Code Usage ; Produit avec Label APB
+          ; produit Retiré du marché <RC>
+          *)
+
+          AddWebInfo(
+                     FieldByName('code').AsString + ';' +
+                     StringReplace(FieldByName('LibF').AsString, ',', '.', [rfReplaceAll]) + ';' +
+                     StringReplace(FieldByName('LibN').AsString, ',', '.', [rfReplaceAll]) + ';' +
+                     FieldByName('catAPBProd').AsString + ';' +
+                     FieldByName('Legislation').AsString + ';' +
+                     BoolToStr((PrixRemise=0) or
+                               (FieldByName('PrixPublic').AsFloat=PrixRemise), '', DecimalStr(FormatFloat('0.00', PrixRemise))) + ';' +
+                     DecimalStr(FormatFloat('0.00', FieldByName('PrixAchat').AsFloat)) + ';' +
+                     FieldByName('TempConservation').AsString + ';' +
+                     FieldByName('CodeLabo').AsString + ';;' +
+                     DecimalStr(FormatFloat('0.00', FieldByName('PcTVA').AsFloat)) + ';' +
+                     '0;' + FieldByName('Usage').AsString + ';;;'
+                    );
 
           if FieldByName('CodeBarre').AsString<>'' then
           Fichier.Add('M,' +  FieldByName('code').AsString + ',' +
@@ -227,10 +299,17 @@ begin
       FileName:= StringReplace(FileName, '%YYYYMMDD%', FormatDateTime('YYYYMMDD', Date),[rfReplaceAll]);
       FileName:= StringReplace(FileName, '%HHNN%', FormatDateTime('HHNN', Time), [RfReplaceAll]);
       FileName:= complete(edDestination.Text, '\') + FileName;
+      if chkMajPxWeb.checked then
+      begin
+        FileNameWeb:= ExtractFilePath(Complete(edDestPrixWeb.Text, '\'));
+        FileNameWeb:= FileNameWeb + 'MajSiteWeb_' + FormatDateTime('YYYYMMDD', Date) + '.txt';
+      end;
       if not FileExists(FileName) or (MessageDLG('le fichier existe déjà, voulez-vous continuer ? le fichier précédent sera écrasé', mtConfirmation, [mbYes, mbNo], 0)=mrYes) then
       begin
         Fichier.SaveToFile(FileName, TEncoding.ASCII);
         Fichier.Clear;
+        if chkMajPxWeb.checked then
+          FichierWeb.SaveToFile(FileNameWeb, TEncoding.ASCII);
         if not file_auto then Fichier.SaveToFile(FileName + '.done');
         if not file_auto then ShowMessage('Fichier créé avec succès');
       end
@@ -238,6 +317,8 @@ begin
     finally
       Free;
       FreeAndNil(Fichier);
+      if chkMajPxWeb.checked then
+        FreeAndNil(FichierWeb);
       btnGenerate.Enabled:= True;
       MnuGenerate.Enabled:= True;
       MnuClose.Enabled:= True;
@@ -328,6 +409,7 @@ begin
   v_config.DataBaseFolder:= edDataBase.Text;
   v_config.DestinationFolder:= edDestination.Text;
   v_config.FormatFileName:= edFormatFileName.Text;
+  v_config.DestinationFolderWeb:= edDestPrixWeb.Text;
   v_config.StockNull:= cbStockNull.Checked;
 end;
 
@@ -335,6 +417,9 @@ procedure TForMainM2COMM.FormCreate(Sender: TObject);
 begin
   edDataBase.Text      := v_config.DataBaseFolder;
   edDestination.Text   := v_config.DestinationFolder;
+  edDestPrixWeb.Text   := v_config.DestinationFolderWeb;
+  if edDestPrixWeb.Text='' then
+    edDestPrixWeb.Text:= edDestination.Text;
   edFormatFileName.Text:= v_config.FormatFileName;
   cbStockNull.Checked  := v_config.StockNull;
 
@@ -364,6 +449,13 @@ end;
 procedure TForMainM2COMM.MnuCloseClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TForMainM2COMM.spbDestPrixWebClick(Sender: TObject);
+var Dossier: string;
+begin
+  if SelectDirectory('Choisir le chemin de destination', 'Dossier', Dossier) then
+    edDestPrixWeb.Text:= Dossier;
 end;
 
 procedure TForMainM2COMM.SpeedButton1Click(Sender: TObject);

@@ -3,7 +3,7 @@ object ForMainM2COMM: TForMainM2COMM
   Top = 0
   BorderStyle = bsToolWindow
   Caption = 'NextPharm --> M2COMM'
-  ClientHeight = 222
+  ClientHeight = 262
   ClientWidth = 568
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -21,21 +21,21 @@ object ForMainM2COMM: TForMainM2COMM
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
-    Left = 16
+    Left = 8
     Top = 93
     Width = 81
     Height = 13
     Caption = 'Format du fichier'
   end
   object Label3: TLabel
-    Left = 16
+    Left = 8
     Top = 125
     Width = 54
     Height = 13
     Caption = 'Destination'
   end
   object Label4: TLabel
-    Left = 16
+    Left = 8
     Top = 57
     Width = 82
     Height = 13
@@ -61,10 +61,26 @@ object ForMainM2COMM: TForMainM2COMM
   end
   object Gauge2: TGauge
     Left = 112
-    Top = 176
+    Top = 208
     Width = 176
     Height = 14
     Progress = 0
+  end
+  object Label2: TLabel
+    Left = 8
+    Top = 157
+    Width = 98
+    Height = 13
+    Caption = 'Destination prix web'
+  end
+  object spbDestPrixWeb: TSpeedButton
+    Left = 536
+    Top = 153
+    Width = 23
+    Height = 22
+    Cursor = crHandPoint
+    Caption = '...'
+    OnClick = spbDestPrixWebClick
   end
   object Panel1: TPanel
     Left = 0
@@ -74,7 +90,7 @@ object ForMainM2COMM: TForMainM2COMM
     Align = alTop
     TabOrder = 0
     object btnGenerate: TButton
-      Left = 7
+      Left = 4
       Top = 7
       Width = 162
       Height = 25
@@ -103,28 +119,17 @@ object ForMainM2COMM: TForMainM2COMM
       Cursor = crHandPoint
       Caption = 'Mise '#224' jour des Prix Web'
       TabOrder = 2
+      Visible = False
       OnClick = btnPrixWebClick
-    end
-    object btnQuery: TButton
-      Left = 435
-      Top = 7
-      Width = 75
-      Height = 25
-      Cursor = crHandPoint
-      Caption = 'Query'
-      Enabled = False
-      TabOrder = 3
-      OnClick = btnQueryClick
     end
   end
   object Panel2: TPanel
     Left = 0
-    Top = 200
+    Top = 240
     Width = 568
     Height = 22
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 181
     object Gauge1: TGauge
       Left = 1
       Top = 1
@@ -146,7 +151,7 @@ object ForMainM2COMM: TForMainM2COMM
     Top = 90
     Width = 425
     Height = 21
-    TabOrder = 2
+    TabOrder = 3
     Text = 'products-%YYYYMMDD%-%HHNN%(Enregistr'#233' automatiquement).csv'
     OnChange = edDataBaseChange
   end
@@ -155,7 +160,7 @@ object ForMainM2COMM: TForMainM2COMM
     Top = 122
     Width = 425
     Height = 21
-    TabOrder = 3
+    TabOrder = 4
     OnChange = edDataBaseChange
   end
   object edDataBase: TEdit
@@ -163,21 +168,21 @@ object ForMainM2COMM: TForMainM2COMM
     Top = 54
     Width = 425
     Height = 21
-    TabOrder = 4
+    TabOrder = 2
     OnChange = edDataBaseChange
   end
   object cbStockNull: TCheckBox
     Left = 332
-    Top = 153
+    Top = 185
     Width = 129
     Height = 17
     Caption = 'Prendre les stocks '#224' 0'
-    TabOrder = 5
+    TabOrder = 7
     Visible = False
   end
   object cbTakeOldRef: TCheckBox
     Left = 112
-    Top = 153
+    Top = 185
     Width = 193
     Height = 17
     Cursor = crHandPoint
@@ -188,14 +193,43 @@ object ForMainM2COMM: TForMainM2COMM
   end
   object btnHistorisation: TButton
     Left = 294
-    Top = 149
+    Top = 181
     Width = 23
     Height = 25
     Cursor = crHandPoint
     Hint = 'Int'#233'grer d'#39'anciens fichiers '#224' l'#39'historique'
     Caption = '...'
-    TabOrder = 7
+    TabOrder = 9
     OnClick = btnHistorisationClick
+  end
+  object btnQuery: TButton
+    Left = 484
+    Top = 197
+    Width = 75
+    Height = 25
+    Cursor = crHandPoint
+    Caption = 'Query'
+    Enabled = False
+    TabOrder = 10
+    OnClick = btnQueryClick
+  end
+  object chkMajPxWeb: TCheckBox
+    Left = 332
+    Top = 201
+    Width = 146
+    Height = 17
+    Caption = 'Mettre '#224' jour les prix web'
+    Checked = True
+    State = cbChecked
+    TabOrder = 8
+  end
+  object edDestPrixWeb: TEdit
+    Left = 112
+    Top = 154
+    Width = 425
+    Height = 21
+    TabOrder = 5
+    OnChange = edDataBaseChange
   end
   object Database1: TADOConnection
     ConnectionString = 
@@ -221,7 +255,7 @@ object ForMainM2COMM: TForMainM2COMM
     Left = 248
     Top = 40
     Bitmap = {
-      494C010101000800480020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800540020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

@@ -11,6 +11,7 @@ object ForScript: TForScript
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poScreenCenter
   PixelsPerInch = 96
@@ -33,9 +34,6 @@ object ForScript: TForScript
     Align = alTop
     BevelInner = bvLowered
     TabOrder = 0
-    ExplicitLeft = 192
-    ExplicitTop = 32
-    ExplicitWidth = 185
     object Button1: TButton
       Tag = 100
       Left = 8
@@ -115,9 +113,6 @@ object ForScript: TForScript
     Width = 734
     Height = 19
     Panels = <>
-    ExplicitLeft = 360
-    ExplicitTop = 256
-    ExplicitWidth = 0
   end
   object dsQuery: TDataSource
     DataSet = qryScript

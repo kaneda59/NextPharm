@@ -32,7 +32,7 @@ implementation
 
 {$R *.dfm}
 
-  uses config, main;
+  uses config, main, System.UITypes;
 
 { TForScript }
 

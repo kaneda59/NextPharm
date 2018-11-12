@@ -13,6 +13,7 @@ type TConfiguration = class
        FFormatFileName: string;
        FDataBaseFolder: string;
        FStockNull: Boolean;
+       FDestinationFolderWeb: string;
        procedure Read;
        procedure Write;
      public
@@ -21,6 +22,7 @@ type TConfiguration = class
      published
        property DataBaseFolder: string read FDataBaseFolder write FDatabaseFolder;
        property DestinationFolder: string read FDestinationFolder write FDestinationFolder;
+       property DestinationFolderWeb: string read FDestinationFolderWeb write FDestinationFolderWeb;
        property FormatFileName: string read FFormatFileName write FFormatFileName;
        property StockNull: Boolean read FStockNull write FStockNull;
      end;
@@ -49,6 +51,7 @@ procedure TConfiguration.Read;
 begin
   FDataBaseFolder   := Fic.ReadString('config', 'database', '');
   FDestinationFolder:= Fic.ReadString('config', 'destination', '');
+  FDestinationFolderWeb:= Fic.ReadString('config', 'destinationWeb', '');
   FFormatFileName   := Fic.ReadString('config', 'formatfilename', 'products-%YYYYMMDD%-%HHNN%.csv');
   FStockNull        := Fic.ReadBool('config', 'stocknull', False);
 end;
@@ -57,6 +60,7 @@ procedure TConfiguration.Write;
 begin
   Fic.WriteString('config', 'database', FDataBaseFolder);
   Fic.WriteString('config', 'destination', FDestinationFolder);
+  Fic.WriteString('config', 'destinationWeb', FDestinationFolderWeb);
   Fic.WriteString('config', 'formatfilename', FFormatFileName);
   Fic.WriteBool('config', 'stocknull', FStocknull);
 end;

@@ -20,14 +20,14 @@ type
     { Déclarations privées }
     FProd: TStringList;
     procedure PrepareDataBase;
-    function TableExists(const TableName: string): Boolean;
-    function ColumnExists(const TableName, ColumnName: string): Boolean;
     procedure CheckField(const TableName, FieldName, script: string);
     procedure CreateTable(q: TAdoQuery; const TableName: string);
     function FindField(const TableName_, FieldName_: string): Boolean;
     function getProductInformation(const value: string): TProductInfo;
   public
     { Déclarations publiques }
+    function TableExists(const TableName: string): Boolean;
+    function ColumnExists(const TableName, ColumnName: string): Boolean;
     function PrepareConnection: Boolean;
     function AddSQLQuery: TADoQuery;
     function FindMedication(const cnk: integer): Boolean;
@@ -50,7 +50,7 @@ implementation
 function TModule.ColumnExists(const TableName, ColumnName: string): Boolean;
 var qr: TAdoQuery;
 begin
-  result:= False;
+  //result:= False;
   qr:= AddSQLQuery;
   try
     qr.SQL.Add('select sql from sqlite_master where name= :name');
@@ -66,7 +66,7 @@ end;
 function TModule.TableExists(const TableName: string): Boolean;
 var q: TAdoQuery;
 begin
-  result:= False;
+  //result:= False;
   q:= AddSQLQuery;
   try
     q.SQL.Add('SELECT name FROM sqlite_master WHERE type=' + QuotedStr('table') + ' AND name=' + QuotedStr(tablename));
@@ -94,7 +94,7 @@ end;
 
 function TModule.FindMedication(const cnk: integer): Boolean;
 begin
-  result:= False;
+  //result:= False;
   with AddSQLQuery do
   try
     SQL.Add('SELECT * FROM histostock WHERE cnk=' + intToStr(cnk));
@@ -107,7 +107,7 @@ begin
 end;
 
 function TModule.getProductInformation(const value: string): TProductInfo;
-var i: integer;
+//var i: integer;
 begin
   FillChar(result, SizeOf(result), 0);
   FProd.DelimitedText:= Value;
