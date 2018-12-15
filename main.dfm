@@ -3,7 +3,7 @@ object ForMainM2COMM: TForMainM2COMM
   Top = 0
   BorderStyle = bsToolWindow
   Caption = 'NextPharm --> M2COMM'
-  ClientHeight = 262
+  ClientHeight = 372
   ClientWidth = 568
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -63,11 +63,12 @@ object ForMainM2COMM: TForMainM2COMM
   end
   object Panel2: TPanel
     Left = 0
-    Top = 240
+    Top = 350
     Width = 568
     Height = 22
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 330
     object Gauge1: TGauge
       Left = 1
       Top = 1
@@ -88,14 +89,12 @@ object ForMainM2COMM: TForMainM2COMM
     Left = 0
     Top = 41
     Width = 568
-    Height = 199
+    Height = 309
     Align = alClient
     TabOrder = 2
     Visible = False
-    ExplicitLeft = 144
-    ExplicitTop = 80
-    ExplicitWidth = 185
-    ExplicitHeight = 41
+    ExplicitLeft = 1
+    ExplicitTop = 39
     object Gauge2: TGauge
       Left = 112
       Top = 170
@@ -167,6 +166,7 @@ object ForMainM2COMM: TForMainM2COMM
       Caption = 'Query'
       Enabled = False
       TabOrder = 0
+      Visible = False
       OnClick = btnQueryClick
     end
     object chkMajPxWeb: TCheckBox
@@ -243,6 +243,65 @@ object ForMainM2COMM: TForMainM2COMM
       TabOrder = 8
       OnChange = edDataBaseChange
     end
+    object grp1: TGroupBox
+      Left = 112
+      Top = 187
+      Width = 366
+      Height = 95
+      Caption = ' Format des '#233'tiquettes '
+      TabOrder = 9
+      object lbl1: TLabel
+        Left = 129
+        Top = 17
+        Width = 76
+        Height = 13
+        Caption = 'Prix sans promo'
+      end
+      object lbl2: TLabel
+        Left = 129
+        Top = 44
+        Width = 96
+        Height = 13
+        Caption = 'Prix promo <= 10%'
+      end
+      object lbl3: TLabel
+        Left = 129
+        Top = 69
+        Width = 88
+        Height = 13
+        Caption = 'Prix promo > 10%'
+      end
+      object edtLabelZero: TEdit
+        Left = 285
+        Top = 14
+        Width = 54
+        Height = 21
+        Alignment = taRightJustify
+        TabOrder = 0
+        Text = '0'
+        OnKeyPress = edtLabelZeroKeyPress
+      end
+      object edtLabelLessTen: TEdit
+        Left = 285
+        Top = 41
+        Width = 54
+        Height = 21
+        Alignment = taRightJustify
+        TabOrder = 1
+        Text = '4'
+        OnKeyPress = edtLabelZeroKeyPress
+      end
+      object edtLabelMoreTen: TEdit
+        Left = 285
+        Top = 66
+        Width = 54
+        Height = 21
+        Alignment = taRightJustify
+        TabOrder = 2
+        Text = '6'
+        OnKeyPress = edtLabelZeroKeyPress
+      end
+    end
   end
   object Database1: TADOConnection
     ConnectionString = 
@@ -268,7 +327,7 @@ object ForMainM2COMM: TForMainM2COMM
     Left = 248
     Top = 40
     Bitmap = {
-      494C0101010008005C0020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800700020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -825,6 +884,39 @@ object ForMainM2COMM: TForMainM2COMM
     object MnuClose: TMenuItem
       Caption = '&Quitter'
       OnClick = MnuCloseClick
+    end
+  end
+  object mmMain: TMainMenu
+    Left = 272
+    Top = 176
+    object MnuOption: TMenuItem
+      Caption = '&Options'
+      object MnuQuery: TMenuItem
+        Tag = 100
+        Caption = '&Ex'#233'cuter une requ'#234'te'
+        OnClick = OnClickAction
+      end
+      object MnuPricesRules: TMenuItem
+        Caption = '&Ajouter des r'#232'gles de gestion sur les prix'
+        object MnuPrixFournisseur: TMenuItem
+          Tag = 101
+          Caption = '&Prix Fournisseur'
+          OnClick = OnClickAction
+        end
+        object MnuPrixPromo: TMenuItem
+          Tag = 102
+          Caption = 'Prix Pr&omo'
+          OnClick = OnClickAction
+        end
+      end
+      object N2: TMenuItem
+        Caption = '-'
+      end
+      object MnuCloseApp: TMenuItem
+        Tag = 103
+        Caption = '&Quitter'
+        OnClick = OnClickAction
+      end
     end
   end
 end

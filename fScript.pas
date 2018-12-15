@@ -80,7 +80,9 @@ var ForScript: TForScript;
 begin
   Application.CreateForm(TForScript, ForScript);
   try
+    Application.MainForm.FormStyle:= fsNormal;
     ForScript.ShowModal;
+    Application.MainForm.FormStyle:= fsStayOnTop;
   finally
     FreeAndNil(ForScript);
   end;

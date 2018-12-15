@@ -92,8 +92,9 @@
         <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <VerInfo_MinorVer>1</VerInfo_MinorVer>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <VerInfo_Keys>CompanyName=Pharmacies de Mons;FileDescription=Logiciel de génération du fichier des étiquettes;FileVersion=1.0.0.0;InternalName=NextPharm Generator M2COMM File;LegalCopyright=Thierry Bosser;LegalTrademarks=FDevelopment;OriginalFilename=Next.exe;ProductName=Next;ProductVersion=1.0.0.0;Comments=ce logiciel privé fonctionne uniquement avec le logiciel NextPharm</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Pharmacies de Mons;FileDescription=Logiciel de génération du fichier des étiquettes;FileVersion=1.1.0.0;InternalName=NextPharm Generator M2COMM File;LegalCopyright=Thierry Bosser;LegalTrademarks=FDevelopment;OriginalFilename=Next.exe;ProductName=Next;ProductVersion=1.0.0.0;Comments=ce logiciel privé fonctionne uniquement avec le logiciel NextPharm</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
@@ -119,17 +120,24 @@
         </DelphiCompile>
         <DCCReference Include="main.pas">
             <Form>ForMainM2COMM</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="config.pas"/>
         <DCCReference Include="fScript.pas">
             <Form>ForScript</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="mdData.pas">
             <Form>Module</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="ukill.pas"/>
+        <DCCReference Include="uLogs.pas"/>
+        <DCCReference Include="fSupplierRules.pas">
+            <Form>ForListSupplierRules</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="fsSupplierRule.pas">
+            <Form>ForSaiSupplierRule</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

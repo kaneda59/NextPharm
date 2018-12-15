@@ -43,6 +43,8 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
+  uses uLogs;
+
 {$R *.dfm}
 
 { TModule }
@@ -94,15 +96,20 @@ end;
 
 function TModule.FindMedication(const cnk: integer): Boolean;
 begin
-  //result:= False;
-  with AddSQLQuery do
+  result:= True;
   try
-    SQL.Add('SELECT * FROM histostock WHERE cnk=' + intToStr(cnk));
-    Open;
-    result:= FieldByName('cnk').AsInteger=cnk;
-    Close;
-  finally
-    Free;
+    with AddSQLQuery do
+    try
+      SQL.Add('SELECT * FROM histostock WHERE cnk=' + intToStr(cnk));
+      Open;
+      result:= FieldByName('cnk').AsInteger=cnk;
+      Close;
+    finally
+      Free;
+    end;
+  except
+    on E: Exception do
+      WriteToLog('erreur lors de la recherche d''un cnk:' + e.Message);
   end;
 end;
 
@@ -223,6 +230,17 @@ begin
     CreateTable(q, 'histostock');
   end;
   CheckField('histostock', 'LibF', 'ADD "LibF" VARCHAR(255)');
+  if not TableExists('SupplierRules') then
+  begin
+    q.SQL.Clear;
+    q.SQL.Add('CREATE TABLE "supplierRules" (');
+    q.SQL.Add('"idSupplier"  INTEGER PRIMARY KEY NOT NULL,');
+    q.SQL.Add('"FieldNameTake" VARVHAR(125)');
+    q.SQL.Add(')');
+
+    CreateTable(q, 'supplierRules');
+  end;
+  CheckField('supplierRules', 'FieldNameTake', 'ADD "FieldNameTake" VARCHAR(125)');
   finally
     FreeAndNil(q);
   end;

@@ -7,10 +7,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Data.DB, Data.Win.ADODB,
-  Vcl.Grids, Vcl.DBGrids, Vcl.ExtCtrls, Vcl.fileCtrl, System.UITypes,
+  Vcl.Grids, Vcl.DBGrids, Vcl.ExtCtrls, Vcl.fileCtrl, System.UITypes, ulogs,
   Vcl.Samples.Gauges, Vcl.Buttons, Vcl.ImgList, Vcl.Menus;
 
 const CNX_STRING : string = 'Provider=PCSoft.HFSQL;Initial Catalog=%s;Password="";Extended Properties="Language=ISO-8859-1"';
+      WM_SETPARAMETERS = WM_USER + 2710;
 
 type
   TForMainM2COMM = class(TForm)
@@ -48,6 +49,21 @@ type
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     spbDestPrixWeb: TSpeedButton;
+    grp1: TGroupBox;
+    lbl1: TLabel;
+    lbl2: TLabel;
+    edtLabelZero: TEdit;
+    edtLabelLessTen: TEdit;
+    lbl3: TLabel;
+    edtLabelMoreTen: TEdit;
+    mmMain: TMainMenu;
+    MnuOption: TMenuItem;
+    MnuQuery: TMenuItem;
+    MnuPricesRules: TMenuItem;
+    N2: TMenuItem;
+    MnuCloseApp: TMenuItem;
+    MnuPrixFournisseur: TMenuItem;
+    MnuPrixPromo: TMenuItem;
     procedure btnGenerateClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure edDataBaseChange(Sender: TObject);
@@ -66,6 +82,8 @@ type
     procedure spbDestPrixWebClick(Sender: TObject);
     procedure Panel1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure edtLabelZeroKeyPress(Sender: TObject; var Key: Char);
+    procedure OnClickAction(Sender: TObject);
   private
     { Déclarations privées }
     Pause: Boolean;
@@ -73,6 +91,7 @@ type
     web_auto : Boolean;
   public
     { Déclarations publiques }
+    procedure GetAlreadyRunning(var msg: TMessage); message WM_SETPARAMETERS;
   end;
 
 var
@@ -82,7 +101,7 @@ implementation
 
 {$R *.dfm}
 
-  uses Config, fScript, mdData;
+  uses Config, fScript, mdData, uKill, fSupplierRules;
 
     function BoolToStr(const cond: Boolean; const sTrue, sFalse: string): string;
     begin
@@ -149,6 +168,14 @@ var Fichier: TStringList;
     FormatEtiquette: string;
 
     PrixRemise: double;
+    strIdFour: string;
+    ListFour: TStringList;
+
+    FieldPrixPublicName: string;
+    FieldRemisePxName  : string;
+    FieldRemisePCTName : string;
+    FieldPromoName     : string;
+    Suffix: string;
 
     function DecimalStr(const value: string): string;
     begin
@@ -162,191 +189,261 @@ var Fichier: TStringList;
          FichierWeb.Add(value);
     end;
 
+    function Default(const value: string; def: string): string;
+    begin
+      result:= def;
+      if value<>'' then result:= value;
+    end;
+
+    function CompleteLeft(const value: string; const len: integer; const car: char): string;
+    var i: Integer;
+    begin
+      result:= value;
+      if Length(result)<Len then
+      for i := 1 to Len-Length(result) do
+        result:= car + Result;
+    end;
+
+    function getStrIdFour: string;
+    begin
+      result:= '';
+      with Module.AddSQLQuery do
+      try
+        SQL.Add('select * from supplierRules');
+        Open;
+        while not Eof do
+        begin
+          result:= Result + FieldByName('idSupplier').AsString + ',';
+          ListFour.Add(FieldByName('idSupplier').AsString + '=' + FieldByName('FieldNameTake').AsString);
+          Next;
+        end;
+        Close;
+        if result<>'' then
+          System.delete(result, Length(result), 1);
+      finally
+        Free;
+      end;
+    end;
+
 begin
   if file_auto or (MessageDLG('Voulez-vous générer le fichier des étiquettes ?', mtConfirmation, [mbYes, mbNo], 0)=mrYes) then
   begin
-    Pause:= False;
-    btnPause.Enabled:= True;
-    MnuPause.Enabled:= True;
-    btnGenerate.Enabled:= False;
-    MnuGenerate.Enabled:= False;
-    MnuClose.Enabled:= False;
-    Fichier:= TStringList.Create;
-    if chkMajPxWeb.checked then
-      FichierWeb:= TStringList.Create;
-    with TAdoQuery.Create(nil) do
     try
-      Database1.Close;
-      DataBase1.ConnectionString:= Format(CNX_STRING, [edDatabase.Text]);
-      Connection:= Database1;
-      SQL.Add('SELECT t.CNK as code,LibF,LibN,PrixPublic,PrixPublic-((PrixPublic*RemisePC)/100) as remisePCT,');
-      SQL.Add('       (PrixPublic-RemisePC) as RemisePx, PrixAchat, TypeRemise, st.StkRayon, st.stkCave, g.CodeBarre, RemisePC,');
-      SQL.Add('       t.catAPBProd, t.Legislation, t.TempConservation, t.CodeLabo, t.pcTVA, t.Usage,');
-      SQL.Add('       pe.DateDébutPromo, pe.DateFinPromo, pe.QtTotalePromo, pe.QtRestantePromo,');
-      SQL.Add('       PrixPublic-((PrixPublic*pe.PCPromo)/100) as PromoPCT, pe.MontantPromo');
-      SQL.Add('FROM tarSpe t LEFT OUTER JOIN AutresCodesBarresSpe g on g.cnk=t.cnk');
-      SQL.Add('              LEFT OUTER JOIN stock st ON st.cnk=t.cnk');
-      SQL.Add('              LEFT OUTER JOIN PromoDetail pd ON pd.valeur=t.cnk');
-      SQL.Add('              LEFt OUTER JOIN PromoEntete pe ON pe.idPromoEntete=pd.idPromoEntete');
-      SQL.Add('WHERE PrixPublic>0');
-//      SQL.Add('SELECT t.CNK as code,LibF,PrixPublic,PrixPublic-((PrixPublic*RemisePC)/100) as remisePCT,');
-//      SQL.Add('       (PrixPublic-RemisePC) as RemisePx, TypeRemise, st.StkRayon, st.stkCave, g.CodeBarre, RemisePC,');
-//      SQL.Add('       t.catAPBProd, t.Legislation, t.TempConservation, t.CodeLabo, t.pcTVA, t.Usage, ');
-//      SQL.Add('FROM tarSpe t LEFT OUTER JOIN AutresCodesBarresSpe g on g.cnk=t.cnk');
-//      SQL.Add('              LEFT OUTER JOIN stock st');
-//      SQL.Add('ON st.cnk=t.cnk');
-//      SQL.Add('WHERE PrixPublic>0');
-      Open;
-      Gauge1.MaxValue:= RecordCount;
-      Gauge1.MinValue:= 0;
-      Gauge1.Progress:= 0;
-      while (not Eof) and (not Pause) do
-      begin
-        if (FieldByName('stkRayon').AsInteger>0) or (cbStockNull.Checked) or
-           (cbTakeOldRef.Checked and Module.FindMedication(FieldByName('Code').AsInteger)) then
+      ListFour:= TStringList.Create;
+      Pause:= False;
+      btnPause.Enabled:= True;
+      MnuPause.Enabled:= True;
+      btnGenerate.Enabled:= False;
+      MnuGenerate.Enabled:= False;
+      MnuClose.Enabled:= False;
+      Fichier:= TStringList.Create;
+      if chkMajPxWeb.checked then
+        FichierWeb:= TStringList.Create;
+      with TAdoQuery.Create(nil) do
+      try
+        Database1.Close;
+        DataBase1.ConnectionString:= Format(CNX_STRING, [edDatabase.Text]);
+        Connection:= Database1;
+        strIdFour:= getStrIdFour;
+        SQL.Add('SELECT t.CNK as code,LibF,LibN,t.PrixPublic,t.PrixPublic-((t.PrixPublic*RemisePC)/100) as remisePCT,');
+        SQL.Add('       (t.PrixPublic-RemisePC) as RemisePx, t.PrixAchat, TypeRemise, st.StkRayon, st.stkCave, g.CodeBarre, RemisePC,');
+        SQL.Add('       t.catAPBProd, t.Legislation, t.TempConservation, t.CodeLabo, t.pcTVA, t.Usage,');
+        SQL.Add('       pe.DateDébutPromo, pe.DateFinPromo, pe.QtTotalePromo, pe.QtRestantePromo,');
+        SQL.Add('       t.PrixPublic-((t.PrixPublic*pe.PCPromo)/100) as PromoPCT, pe.MontantPromo');
+        if strIdFour<>'' then
         begin
-          formatEtiquette:= '0';
-          if FieldByName('TypeRemise').AsInteger=3 then
-          begin
-            if FieldByName('remisePC').AsFloat<>0 then
-            begin
-              if FieldByName('remisePC').AsFloat>10 then
-                formatEtiquette:= '3';
-              if FieldByName('remisePC').AsFloat<=10 then
-                formatEtiquette:= '4';
-            end;
-          end
-          else if FieldByName('TypeRemise').AsInteger=5 then
-                 formatEtiquette:= '3';
-
-          begin
-            if FieldByName('TypeRemise').AsInteger=3 then
-              PrixRemise:= FieldByName('remisePCT').AsFloat
-            else
-            if FieldByName('TypeRemise').AsInteger=5 then
-              PrixRemise:= FieldByName('RemisePx').AsFloat
-            else PrixRemise:= 0;
-          end;
-
-          if  ( // test de la date de promo
-               varIsNull(FieldByName('DateDébutPromo').Value) or
-               (
-                (FieldByName('DateDébutPromo').AsDateTime>=Date) and
-                (FieldByName('DateFinPromo').AsDateTime<=Date)
-               )
-              ) or
-              ( // test des qtés min/max
-                (FieldByName('QtRestantePromo').AsInteger>0)
-              )
-          then
-          begin
-            OutputDebugString(pchar('on test si promo : ' + FieldByName('Code').AsString));
-            if FieldByName('PromoPCT').AsFloat<>0 then
-            begin
-              OutputDebugString(pchar('promo en %'));
-              PrixRemise:= FieldByName('PromoPCT').AsFloat;
-              if FieldByName('PromoPCT').AsFloat>10 then
-                formatEtiquette:= '3';
-              if FieldByName('PromoPCT').AsFloat<=10 then
-                formatEtiquette:= '4';
-            end
-            else
-            if FieldByName('MontantPromo').AsFloat<>0 then
-            begin
-              OutputDebugString(pchar('promo en montant'));
-              PrixRemise:= FieldByName('MontantPromo').AsFloat;
-  //            if FieldByName('PromoPCT').AsFloat<>0 then
-  //            begin
-  //              if FieldByName('PromoPCT').AsFloat>10 then
-  //                formatEtiquette:= '3';
-  //              if FieldByName('PromoPCT').AsFloat<=10 then
-  //                formatEtiquette:= '4';
-  //            end;
-            end
-            else outputdebugstring('aucune promo pour ce produit');
-          end;
-
-          (*  Fichier MAJ WEB
-          Cnk ; libellé F ; libellé N ; Catégorie APB ; Code législation ; Prix public (TvaC)
-          ; Prix Achat (Htva) ; Code T° de conservation ; Code Labo ; Nom labo
-          ; % TVA ; Code de ventilation ; Code Usage ; Produit avec Label APB
-          ; produit Retiré du marché <RC>
-          *)
-
-          AddWebInfo(
-                     FieldByName('code').AsString + ';' +
-                     StringReplace(FieldByName('LibF').AsString, ',', '.', [rfReplaceAll]) + ';' +
-                     StringReplace(FieldByName('LibN').AsString, ',', '.', [rfReplaceAll]) + ';' +
-                     FieldByName('catAPBProd').AsString + ';' +
-                     FieldByName('Legislation').AsString + ';' +
-                     BoolToStr((PrixRemise=0) or
-                               (FieldByName('PrixPublic').AsFloat=PrixRemise), '', DecimalStr(FormatFloat('0.00', PrixRemise))) + ';' +
-                     DecimalStr(FormatFloat('0.00', FieldByName('PrixAchat').AsFloat)) + ';' +
-                     FieldByName('TempConservation').AsString + ';' +
-                     FieldByName('CodeLabo').AsString + ';;' +
-                     DecimalStr(FormatFloat('0.00', FieldByName('PcTVA').AsFloat)) + ';' +
-                     '0;' + FieldByName('Usage').AsString + ';;;'
-                    );
-
-          if FieldByName('CodeBarre').AsString<>'' then
-          Fichier.Add('M,' +  FieldByName('code').AsString + ',' +
-                              FieldByName('codeBarre').AsString + ',' +
-                              formatEtiquette + ',' +
-                              StringReplace(FieldByName('LibF').AsString, ',', '.', [rfReplaceAll]) + ',' + FieldByName('StkCave').AsString + ',1,' +
-                              DecimalStr(FormatFloat('0.00', FieldByName('PrixPublic').AsFloat)) + ',' +
-                              BoolToStr((PrixRemise=0) or
-                                        (FieldByName('PrixPublic').AsFloat=PrixRemise), '', DecimalStr(FormatFloat('0.00', PrixRemise))) + ',' +
-                              FieldByName('StkRayon').AsString);
-          Fichier.Add('M,' +  FieldByName('code').AsString + ',' +
-                              FieldByName('code').AsString + ',' +
-                              formatEtiquette + ',' +
-                              StringReplace(FieldByName('LibF').AsString, ',', '.', [rfReplaceAll]) + ',' + FieldByName('StkCave').AsString + ',1,' +
-                              DecimalStr(FormatFloat('0.00', FieldByName('PrixPublic').AsFloat)) + ',' +
-                              BoolToStr((PrixRemise=0) or
-                                        (FieldByName('PrixPublic').AsFloat=PrixRemise), '', DecimalStr(FormatFloat('0.00', PrixRemise))) + ',' +
-                              FieldByName('StkRayon').AsString);
-
-          Module.AddMedication(FieldByName('code').AsInteger,
-                               FieldByName('LibF').AsString);
+          SQL.Add('       , pf.NumFour');
+          SQL.Add('       , (pf.PrixPublic-RemisePC) as RemisePxFour');
+          SQL.Add('       , pf.PrixPublic as PrixFournisseur');
+          SQL.Add('       , pf.PrixPublic-((pf.PrixPublic*RemisePC)/100) as remisePCTFour');
+          SQL.Add('       , pf.PrixPublic-((pf.PrixPublic*pe.PCPromo)/100) as PromoPCTFour');
         end;
-        Gauge1.Progress:= Gauge1.Progress + 1;
-        LblPos.Caption:= intToStr(RecNo) + '/' + intToStr(RecordCount);
-        Application.ProcessMessages;
-        Next;
-      end;
-      Close;
-      FileName:= edFormatFileName.Text;
-      FileName:= StringReplace(FileName, '%YYYYMMDD%', FormatDateTime('YYYYMMDD', Date),[rfReplaceAll]);
-      FileName:= StringReplace(FileName, '%HHNN%', FormatDateTime('HHNN', Time), [RfReplaceAll]);
-      FileName:= complete(edDestination.Text, '\') + FileName;
-      if chkMajPxWeb.checked then
-      begin
-        FileNameWeb:= ExtractFilePath(Complete(edDestPrixWeb.Text, '\'));
-        FileNameWeb:= FileNameWeb + 'MajSiteWeb_' + FormatDateTime('YYYYMMDD', Date) + '.txt';
-      end;
-      if not FileExists(FileName) or (MessageDLG('le fichier existe déjà, voulez-vous continuer ? le fichier précédent sera écrasé', mtConfirmation, [mbYes, mbNo], 0)=mrYes) then
-      begin
-        Fichier.SaveToFile(FileName, TEncoding.ASCII);
-        Fichier.Clear;
+        SQL.Add('FROM tarSpe t LEFT OUTER JOIN AutresCodesBarresSpe g on g.cnk=t.cnk');
+        SQL.Add('              LEFT OUTER JOIN stock st ON st.cnk=t.cnk');
+        SQL.Add('              LEFT OUTER JOIN PromoDetail pd ON pd.valeur=t.cnk');
+        SQL.Add('              LEFT OUTER JOIN PromoEntete pe ON pe.idPromoEntete=pd.idPromoEntete');
+        if strIdFour<>'' then
+          SQL.Add('              LEFT OUTER JOIN TarPrixFour pf ON pf.cnk=t.cnk and NumFour in ('+strIdFour+')');
+        SQL.Add('WHERE PrixPublic>0');
+        SQL.SaveToFile(ExtractFilePath(ParamStr(0)) + 'script.sql');
+        Open;
+        Gauge1.MaxValue:= RecordCount;
+        Gauge1.MinValue:= 0;
+        Gauge1.Progress:= 0;
+        while (not Eof) and (not Pause) do
+        begin
+          if (FieldByName('stkRayon').AsInteger>0) or (cbStockNull.Checked) or
+             (cbTakeOldRef.Checked and Module.FindMedication(FieldByName('Code').AsInteger)) then
+          begin
+            if ListFour.IndexOfName(FieldByName('numFour').AsString)>=0 then
+            begin
+              suffix:= BoolToStr(ListFour.Values[FieldByName('numFour').AsString]='prixpublic', '', 'Four');
+              FieldPrixPublicName:= BoolToStr(ListFour.Values[FieldByName('numFour').AsString]='prixpublic', 'PrixPublic', 'PrixFournisseur');
+              FieldRemisePxName  := 'RemisePx' + suffix;
+              FieldRemisePCTName := 'remisePCT' + suffix;
+              FieldPromoName     := 'PromoPCT' + suffix;
+            end
+            else
+            begin
+              FieldPrixPublicName:= 'PrixPublic';
+              FieldRemisePxName  := 'RemisePx';
+              FieldRemisePCTName := 'remisePCT';
+              FieldPromoName     := 'PromoPCT';
+            end;
+            formatEtiquette:= default(edtLabelZero.Text, '0');
+            if FieldByName('TypeRemise').AsInteger=3 then
+            begin
+              if FieldByName('remisePC').AsFloat<>0 then
+              begin
+                if FieldByName('remisePC').AsFloat>10 then
+                  formatEtiquette:= default(edtLabelMoreTen.Text, '6');
+                if FieldByName('remisePC').AsFloat<=10 then
+                  formatEtiquette:= default(edtLabelLessTen.Text, '4');
+              end;
+            end
+            else if FieldByName('TypeRemise').AsInteger=5 then
+                   formatEtiquette:= default(edtLabelMoreTen.Text, '6');
+
+            begin
+              if FieldByName('TypeRemise').AsInteger=3 then
+                PrixRemise:= FieldByName(FieldRemisePCTName).AsFloat
+              else
+              if FieldByName('TypeRemise').AsInteger=5 then
+                PrixRemise:= FieldByName(FieldRemisePxName).AsFloat
+              else PrixRemise:= 0;
+            end;
+
+            if  ( // test de la date de promo
+                 varIsNull(FieldByName('DateDébutPromo').Value) or
+                 (
+                  (FieldByName('DateDébutPromo').AsDateTime>=Date) and
+                  (FieldByName('DateFinPromo').AsDateTime<=Date)
+                 )
+                ) or
+                ( // test des qtés min/max
+                  (FieldByName('QtRestantePromo').AsInteger>0)
+                )
+            then
+            begin
+              OutputDebugString(pchar('on test si promo : ' + FieldByName('Code').AsString));
+              if FieldByName(FieldPromoName).AsFloat<>0 then
+              begin
+                OutputDebugString(pchar('promo en %'));
+                PrixRemise:= FieldByName(FieldPromoName).AsFloat;
+                if FieldByName(FieldPromoName).AsFloat>10 then
+                  formatEtiquette:= '3';
+                if FieldByName(FieldPromoName).AsFloat<=10 then
+                  formatEtiquette:= '4';
+              end
+              else
+              if FieldByName('MontantPromo').AsFloat<>0 then
+              begin
+                OutputDebugString(pchar('promo en montant'));
+                PrixRemise:= FieldByName('MontantPromo').AsFloat;
+    //            if FieldByName('PromoPCT').AsFloat<>0 then
+    //            begin
+    //              if FieldByName('PromoPCT').AsFloat>10 then
+    //                formatEtiquette:= '3';
+    //              if FieldByName('PromoPCT').AsFloat<=10 then
+    //                formatEtiquette:= '4';
+    //            end;
+              end
+              else outputdebugstring('aucune promo pour ce produit');
+            end;
+
+            (*  Fichier MAJ WEB
+            Cnk ; libellé F ; libellé N ; Catégorie APB ; Code législation ; Prix public (TvaC)
+            ; Prix Achat (Htva) ; Code T° de conservation ; Code Labo ; Nom labo
+            ; % TVA ; Code de ventilation ; Code Usage ; Produit avec Label APB
+            ; produit Retiré du marché <RC>
+            *)
+
+            AddWebInfo(
+                       CompleteLeft(FieldByName('code').AsString, 7, '0') + ';' +
+                       StringReplace(FieldByName('LibF').AsString, ',', '.', [rfReplaceAll]) + ';' +
+                       StringReplace(FieldByName('LibN').AsString, ',', '.', [rfReplaceAll]) + ';' +
+                       FieldByName('catAPBProd').AsString + ';' +
+                       FieldByName('Legislation').AsString + ';' +
+                       BoolToStr((PrixRemise=0) or
+                                 (FieldByName(FieldPrixPublicName).AsFloat=PrixRemise), '', DecimalStr(FormatFloat('0.00', PrixRemise))) + ';' +
+                       DecimalStr(FormatFloat('0.00', FieldByName('PrixAchat').AsFloat)) + ';' +
+                       FieldByName('TempConservation').AsString + ';' +
+                       FieldByName('CodeLabo').AsString + ';;' +
+                       DecimalStr(FormatFloat('0.00', FieldByName('PcTVA').AsFloat)) + ';' +
+                       '0;' + FieldByName('Usage').AsString + ';;;'
+                      );
+
+            if FieldByName('CodeBarre').AsString<>'' then
+            Fichier.Add('M,' +  CompleteLeft(FieldByName('code').AsString, 7, '0') + ',' +
+                                FieldByName('codeBarre').AsString + ',' +
+                                formatEtiquette + ',' +
+                                StringReplace(FieldByName('LibF').AsString, ',', '.', [rfReplaceAll]) + ',' + FieldByName('StkCave').AsString + ',1,' +
+                                DecimalStr(FormatFloat('0.00', FieldByName(FieldPrixPublicName).AsFloat)) + ',' +
+                                BoolToStr((PrixRemise=0) or
+                                          (FieldByName(FieldPrixPublicName).AsFloat=PrixRemise), '', DecimalStr(FormatFloat('0.00', PrixRemise))) + ',' +
+                                FieldByName('StkRayon').AsString);
+            Fichier.Add('M,' +  CompleteLeft(FieldByName('code').AsString, 7, '0') + ',' +
+                                CompleteLeft(FieldByName('code').AsString, 7, '0') + ',' +
+                                formatEtiquette + ',' +
+                                StringReplace(FieldByName('LibF').AsString, ',', '.', [rfReplaceAll]) + ',' + FieldByName('StkCave').AsString + ',1,' +
+                                DecimalStr(FormatFloat('0.00', FieldByName(FieldPrixPublicName).AsFloat)) + ',' +
+                                BoolToStr((PrixRemise=0) or
+                                          (FieldByName(FieldPrixPublicName).AsFloat=PrixRemise), '', DecimalStr(FormatFloat('0.00', PrixRemise))) + ',' +
+                                FieldByName('StkRayon').AsString);
+
+            Module.AddMedication(FieldByName('code').AsInteger,
+                                 FieldByName('LibF').AsString);
+          end;
+          Gauge1.Progress:= Gauge1.Progress + 1;
+          LblPos.Caption:= intToStr(RecNo) + '/' + intToStr(RecordCount);
+          Application.ProcessMessages;
+          Next;
+        end;
+        Close;
+        FileName:= edFormatFileName.Text;
+        FileName:= StringReplace(FileName, '%YYYYMMDD%', FormatDateTime('YYYYMMDD', Date),[rfReplaceAll]);
+        FileName:= StringReplace(FileName, '%HHNN%', FormatDateTime('HHNN', Time), [RfReplaceAll]);
+        FileName:= complete(edDestination.Text, '\') + FileName;
         if chkMajPxWeb.checked then
-          FichierWeb.SaveToFile(FileNameWeb, TEncoding.ASCII);
-        if not file_auto then Fichier.SaveToFile(FileName + '.done');
-        if not file_auto then ShowMessage('Fichier créé avec succès');
-      end
-      else if not file_auto then ShowMessage('Abandon');
-    finally
-      Free;
-      FreeAndNil(Fichier);
-      if chkMajPxWeb.checked then
-        FreeAndNil(FichierWeb);
-      btnGenerate.Enabled:= True;
-      MnuGenerate.Enabled:= True;
-      MnuClose.Enabled:= True;
-      BtnPause.Enabled:= False;
-      MnuPause.Enabled:= False;
+        begin
+          FileNameWeb:= ExtractFilePath(Complete(edDestPrixWeb.Text, '\'));
+          FileNameWeb:= FileNameWeb + 'MajSiteWeb_' + FormatDateTime('YYYYMMDD', Date) + '.txt';
+        end;
+        if not FileExists(FileName) or (MessageDLG('le fichier existe déjà, voulez-vous continuer ? le fichier précédent sera écrasé', mtConfirmation, [mbYes, mbNo], 0)=mrYes) then
+        begin
+          Fichier.SaveToFile(FileName, TEncoding.ASCII);
+          Fichier.Clear;
+          if chkMajPxWeb.checked then
+            FichierWeb.SaveToFile(FileNameWeb, TEncoding.ASCII);
+          if not file_auto then Fichier.SaveToFile(FileName + '.done');
+          if not file_auto then ShowMessage('Fichier créé avec succès');
+        end
+        else if not file_auto then ShowMessage('Abandon');
+      finally
+        Free;
+        FreeAndNil(Fichier);
+        if chkMajPxWeb.checked then
+          FreeAndNil(FichierWeb);
+        btnGenerate.Enabled:= True;
+        MnuGenerate.Enabled:= True;
+        MnuClose.Enabled:= True;
+        BtnPause.Enabled:= False;
+        MnuPause.Enabled:= False;
+        FreeAndNil(ListFour);
+      end;
+    except
+      on E: Exception do
+      begin
+        WriteToLog('Erreur lors de la génération du fichier : ' + e.Message);
+        WriteToLog('Connection : ' + DataBase1.ConnectionString);
+      end;
     end;
   end;
-  if file_auto and (not web_auto) then Application.Terminate;
+  if file_auto and (not web_auto) then
+  begin
+    WriteToLog('on quitte le programme');
+    KillProgramme(ExtractFileName(ParamStr(0)));
+  end;
 end;
 
 procedure TForMainM2COMM.btnHistorisationClick(Sender: TObject);
@@ -425,6 +522,12 @@ begin
   btnQuery.Enabled:= btnGenerate.Enabled;
 end;
 
+procedure TForMainM2COMM.edtLabelZeroKeyPress(Sender: TObject; var Key: Char);
+begin
+  if not CharInSet(Key, ['0'..'9', #8, #9]) then
+    Key:= #0;
+end;
+
 procedure TForMainM2COMM.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   v_config.DataBaseFolder:= edDataBase.Text;
@@ -432,11 +535,16 @@ begin
   v_config.FormatFileName:= edFormatFileName.Text;
   v_config.DestinationFolderWeb:= edDestPrixWeb.Text;
   v_config.StockNull:= cbStockNull.Checked;
+  v_config.FmtZeroDisc:= edtLabelZero.Text;
+  v_config.FmtLTenDisc:= edtLabelLessTen.Text;
+  v_config.FmtMTenDisc:= edtLabelMoreTen.Text;
+  v_config.MajPxWeb   := chkMajPxWeb.Checked;
 end;
 
 procedure TForMainM2COMM.FormCreate(Sender: TObject);
 begin
   Height:= 90;
+  CreateLogfile;
   edDataBase.Text      := v_config.DataBaseFolder;
   edDestination.Text   := v_config.DestinationFolder;
   edDestPrixWeb.Text   := v_config.DestinationFolderWeb;
@@ -445,8 +553,16 @@ begin
   edFormatFileName.Text:= v_config.FormatFileName;
   cbStockNull.Checked  := v_config.StockNull;
 
+  edtLabelZero.Text    := v_config.FmtZeroDisc;
+  edtLabelLessTen.Text := v_config.FmtLTenDisc;
+  edtLabelMoreTen.Text := v_config.FmtMTenDisc;
+  chkMajPxWeb.Checked  := v_config.MajPxWeb;
+
   file_auto:= ParamStr(1)='/file';
   web_auto := ParamStr(2)='/web';
+
+  if file_auto then WriteToLog('exécution en mode automatique');
+  if web_auto then WriteToLog('génération automatique du fichier web');
 
   if file_auto and (edDataBase.Text<>'') and (edDestination.Text<>'') then btnGenerate.Click;
   if web_auto  and (edDataBase.Text<>'') and (edDestination.Text<>'') then  btnPrixWeb.Click;
@@ -468,9 +584,31 @@ begin
   Top  := Screen.Height - Height - 32;
 end;
 
+procedure TForMainM2COMM.GetAlreadyRunning(var msg: TMessage);
+begin
+  file_auto:= Boolean(msg.WParam);
+  web_auto := Boolean(msg.LParam);
+
+  if web_auto then
+    chkMajPxWeb.Checked:= True;
+
+  if file_auto then
+    btnGenerate.Click;
+end;
+
 procedure TForMainM2COMM.MnuCloseClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TForMainM2COMM.OnClickAction(Sender: TObject);
+begin
+  case TMenuitem(Sender).Tag of
+     100 : btnQuery.Click;
+     101 : TForListSupplierRules.Execute;
+     102 : ;
+     103 : Close;
+  end;
 end;
 
 procedure TForMainM2COMM.Panel1MouseDown(Sender: TObject; Button: TMouseButton;
@@ -478,8 +616,9 @@ procedure TForMainM2COMM.Panel1MouseDown(Sender: TObject; Button: TMouseButton;
 begin
   if ssCtrl in SHIFT then
   begin
+    Menu:= mmMain;
     pnl1.Visible:= True;
-    Height:= 291;
+    Height:= 405;
     Top   := Screen.Height - Height - 32;
   end;
 end;
