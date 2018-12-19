@@ -1,5 +1,9 @@
 program Next;
 
+
+
+{$R 'Elevation.res' 'Elevation.rc'}
+
 uses
   Winapi.Windows,
   Vcl.Forms,
@@ -52,7 +56,7 @@ begin
   begin
     Application.MainFormOnTaskbar := True;
     Application.ShowMainForm := True;
-    TStyleManager.TrySetStyle('Smokey Quartz Kamri');
+    TStyleManager.TrySetStyle('Charcoal Dark Slate');
     Application.CreateForm(TModule, Module);
   Application.CreateForm(TForMainM2COMM, ForMainM2COMM);
   Application.Run;

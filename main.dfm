@@ -27,7 +27,15 @@ object ForMainM2COMM: TForMainM2COMM
     Height = 41
     Align = alTop
     TabOrder = 0
-    OnMouseDown = Panel1MouseDown
+    object btnConfig: TSpeedButton
+      Left = 536
+      Top = 11
+      Width = 23
+      Height = 22
+      Cursor = crHandPoint
+      Caption = '...'
+      OnClick = btnConfigClick
+    end
     object btnGenerate: TButton
       Left = 4
       Top = 7
@@ -68,7 +76,6 @@ object ForMainM2COMM: TForMainM2COMM
     Height = 22
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 330
     object Gauge1: TGauge
       Left = 1
       Top = 1
@@ -93,8 +100,6 @@ object ForMainM2COMM: TForMainM2COMM
     Align = alClient
     TabOrder = 2
     Visible = False
-    ExplicitLeft = 1
-    ExplicitTop = 39
     object Gauge2: TGauge
       Left = 112
       Top = 170
@@ -327,7 +332,7 @@ object ForMainM2COMM: TForMainM2COMM
     Left = 248
     Top = 40
     Bitmap = {
-      494C010101000800700020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800740020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000002000000001002000000000000040
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

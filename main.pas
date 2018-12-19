@@ -12,6 +12,7 @@ uses
 
 const CNX_STRING : string = 'Provider=PCSoft.HFSQL;Initial Catalog=%s;Password="";Extended Properties="Language=ISO-8859-1"';
       WM_SETPARAMETERS = WM_USER + 2710;
+      InputBoxMessage  = WM_USER + 200;
 
 type
   TForMainM2COMM = class(TForm)
@@ -64,6 +65,7 @@ type
     MnuCloseApp: TMenuItem;
     MnuPrixFournisseur: TMenuItem;
     MnuPrixPromo: TMenuItem;
+    btnConfig: TSpeedButton;
     procedure btnGenerateClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure edDataBaseChange(Sender: TObject);
@@ -84,6 +86,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure edtLabelZeroKeyPress(Sender: TObject; var Key: Char);
     procedure OnClickAction(Sender: TObject);
+    procedure btnConfigClick(Sender: TObject);
   private
     { Déclarations privées }
     Pause: Boolean;
@@ -92,6 +95,7 @@ type
   public
     { Déclarations publiques }
     procedure GetAlreadyRunning(var msg: TMessage); message WM_SETPARAMETERS;
+    procedure InputBoxSetPasswordChar(var Msg: TMessage); message InputBoxMessage;
   end;
 
 var
@@ -159,6 +163,48 @@ implementation
 //    LFileStream.Free;
 //  end;
 //end;
+
+procedure TForMainM2COMM.InputBoxSetPasswordChar(var Msg: TMessage);
+var
+   hInputForm, hEdit, hButton: HWND;
+begin
+   hInputForm := Screen.Forms[0].Handle;
+   if (hInputForm <> 0) then
+   begin
+     hEdit := FindWindowEx(hInputForm, 0, 'TEdit', nil);
+     {
+       // Change button text:
+       hButton := FindWindowEx(hInputForm, 0, 'TButton', nil);
+       SendMessage(hButton, WM_SETTEXT, 0, Integer(PChar('Cancel')));
+     }
+     SendMessage(hEdit, EM_SETPASSWORDCHAR, Ord('*'), 0);
+   end;
+end;
+
+procedure TForMainM2COMM.btnConfigClick(Sender: TObject);
+var Password: string;
+begin
+  if Height<405 then
+  begin
+    PostMessage(Handle, InputBoxMessage, 0, 0);
+    Password:= InputBox('Identification', 'Mot de passe', '');
+    if Password='M2COMM' then
+    begin
+      Menu:= mmMain;
+      pnl1.Visible:= True;
+      Height:= 405;
+      Top   := Screen.Height - Height - 32;
+    end
+    else MessageDlg('Mot de passe non valide et/ou obligatoire', mtWarning, [mbOK], 0);
+  end
+  else
+  begin
+    Height:= 90;
+    Left := Screen.Width - Width - 5;
+    Top  := Screen.Height - Height - 32;
+    Menu:= nil;
+  end;
+end;
 
 procedure TForMainM2COMM.btnGenerateClick(Sender: TObject);
 var Fichier: TStringList;
