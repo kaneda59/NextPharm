@@ -1,17 +1,20 @@
 # NextPharm
-sources logiciel pour NextPharm, ne peut fonctionner que pour NextPharm
+software sources for NextPharm, can only work for NextPharm
 
 réalisation : FDevelopment EIRL
 développeur : Fabrice DEPREZ.
 
-Client      : Pharmacie utilisant le logiciel de gestion de Pharmacie NextPharm combiné à M2COMM
+Client      : Pharmacy using NextPharm Pharmacy Management Software combined with M2COMM
 
-Object      : ce programme extrait un catalogue des médicaments au format M2COMM en vue d'une intégration 
-              automatique des étiquettes.
+Object      : this program extracts a catalogue of drugs in M2COMM format for integration 
+              automatic labeling.
               
-Licence     : Licence libre de droits, toute modification et/ou copie doit être reférée à l'auteur.
+Licence     : Royalty-free license, any modification and/or copy must be referred to the author.
 
 contact     : fdeprez@fdevelopment.eu
 site        : http://www.fdevelopment.eu
+
+RAD         : Delphi XE4
+Components  : ADODB for connection to databases
 
 
