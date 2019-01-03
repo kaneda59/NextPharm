@@ -298,7 +298,7 @@ begin
         SQL.Add('       t.PrixPublic-((t.PrixPublic*pe.PCPromo)/100) as PromoPCT, pe.MontantPromo');
         if strIdFour<>'' then
         begin
-          SQL.Add('       , pf.NumFour');
+          SQL.Add('       , pf.NumFour as NumFour');
           SQL.Add('       , (pf.PrixPublic-RemisePC) as RemisePxFour');
           SQL.Add('       , pf.PrixPublic as PrixFournisseur');
           SQL.Add('       , pf.PrixPublic-((pf.PrixPublic*RemisePC)/100) as remisePCTFour');
@@ -309,19 +309,19 @@ begin
         SQL.Add('              LEFT OUTER JOIN PromoDetail pd ON pd.valeur=t.cnk');
         SQL.Add('              LEFT OUTER JOIN PromoEntete pe ON pe.idPromoEntete=pd.idPromoEntete');
         if strIdFour<>'' then
-          SQL.Add('              LEFT OUTER JOIN TarPrixFour pf ON pf.cnk=t.cnk and NumFour in ('+strIdFour+')');
+          SQL.Add('              LEFT OUTER JOIN TarPrixFour pf ON pf.cnk=t.cnk and pf.NumFour in ('+strIdFour+')');
         SQL.Add('WHERE PrixPublic>0');
-        SQL.SaveToFile(ExtractFilePath(ParamStr(0)) + 'script.sql');
+        //SQL.SaveToFile(ExtractFilePath(ParamStr(0)) + 'script.sql');
         Open;
         Gauge1.MaxValue:= RecordCount;
         Gauge1.MinValue:= 0;
         Gauge1.Progress:= 0;
         while (not Eof) and (not Pause) do
         begin
-          if (FieldByName('stkRayon').AsInteger>0) or (cbStockNull.Checked) or
-             (cbTakeOldRef.Checked and Module.FindMedication(FieldByName('Code').AsInteger)) then
+          //if (FieldByName('stkRayon').AsInteger>0) or (cbStockNull.Checked) or
+          //   (cbTakeOldRef.Checked and Module.FindMedication(FieldByName('Code').AsInteger)) then
           begin
-            if ListFour.IndexOfName(FieldByName('numFour').AsString)>=0 then
+            if (strIdFour<>'') and (ListFour.IndexOfName(FieldByName('numFour').AsString)>=0) then
             begin
               suffix:= BoolToStr(ListFour.Values[FieldByName('numFour').AsString]='prixpublic', '', 'Four');
               FieldPrixPublicName:= BoolToStr(ListFour.Values[FieldByName('numFour').AsString]='prixpublic', 'PrixPublic', 'PrixFournisseur');
@@ -437,8 +437,8 @@ begin
                                           (FieldByName(FieldPrixPublicName).AsFloat=PrixRemise), '', DecimalStr(FormatFloat('0.00', PrixRemise))) + ',' +
                                 FieldByName('StkRayon').AsString);
 
-            Module.AddMedication(FieldByName('code').AsInteger,
-                                 FieldByName('LibF').AsString);
+            //Module.AddMedication(FieldByName('code').AsInteger,
+            //                     FieldByName('LibF').AsString);
           end;
           Gauge1.Progress:= Gauge1.Progress + 1;
           LblPos.Caption:= intToStr(RecNo) + '/' + intToStr(RecordCount);
