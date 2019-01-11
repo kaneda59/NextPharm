@@ -46,7 +46,7 @@ begin
   if GetLastError = ERROR_ALREADY_EXISTS then
   begin
    HandleApp:= FindWindow('TForMainM2COMM', nil);
-   file_auto:= ParamStr(1)='/file';
+   file_auto:= (ParamStr(1)='/file') or (ParamStr(1)='/auto');
    web_auto := ParamStr(2)='/web';
    if file_auto or web_auto then
         ShowAllReadyApplication(HandleApp)

@@ -290,6 +290,8 @@ begin
         Database1.Close;
         DataBase1.ConnectionString:= Format(CNX_STRING, [edDatabase.Text]);
         Connection:= Database1;
+        if file_auto then
+          Module.PrepareConnection;
         strIdFour:= getStrIdFour;
         SQL.Add('SELECT t.CNK as code,LibF,LibN,t.PrixPublic,t.PrixPublic-((t.PrixPublic*RemisePC)/100) as remisePCT,');
         SQL.Add('       (t.PrixPublic-RemisePC) as RemisePx, t.PrixAchat, TypeRemise, st.StkRayon, st.stkCave, g.CodeBarre, RemisePC,');
@@ -604,7 +606,7 @@ begin
   edtLabelMoreTen.Text := v_config.FmtMTenDisc;
   chkMajPxWeb.Checked  := v_config.MajPxWeb;
 
-  file_auto:= ParamStr(1)='/file';
+  file_auto:= (ParamStr(1)='/file') or (ParamStr(1)='/auto');
   web_auto := ParamStr(2)='/web';
 
   if file_auto then WriteToLog('exécution en mode automatique');
