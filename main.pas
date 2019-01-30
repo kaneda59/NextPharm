@@ -290,9 +290,18 @@ begin
         Database1.Close;
         DataBase1.ConnectionString:= Format(CNX_STRING, [edDatabase.Text]);
         Connection:= Database1;
-        if file_auto then
-          Module.PrepareConnection;
-        strIdFour:= getStrIdFour;
+        try
+          if file_auto then
+            Module.PrepareConnection;
+          strIdFour:= getStrIdFour;
+
+          if strIdFour<>'' then
+            WriteToLog('on a des règles fournisseurs');
+        except
+          on E: Exception do
+            WriteToLog('erreur lors de la récupération des règles fournisseurs : ' + e.Message);
+        end;
+
         SQL.Add('SELECT t.CNK as code,LibF,LibN,t.PrixPublic,t.PrixPublic-((t.PrixPublic*RemisePC)/100) as remisePCT,');
         SQL.Add('       (t.PrixPublic-RemisePC) as RemisePx, t.PrixAchat, TypeRemise, st.StkRayon, st.stkCave, g.CodeBarre, RemisePC,');
         SQL.Add('       t.catAPBProd, t.Legislation, t.TempConservation, t.CodeLabo, t.pcTVA, t.Usage,');
@@ -314,7 +323,20 @@ begin
           SQL.Add('              LEFT OUTER JOIN TarPrixFour pf ON pf.cnk=t.cnk and pf.NumFour in ('+strIdFour+')');
         SQL.Add('WHERE PrixPublic>0');
         //SQL.SaveToFile(ExtractFilePath(ParamStr(0)) + 'script.sql');
-        Open;
+        try
+          Open;
+        except
+          on E: Exception do
+          begin
+            WriteToLog('erreur à l''ouverture de la requête des prix : ' + e.Message);
+            if file_auto and (not web_auto) then
+            begin
+              WriteToLog('on quitte le programme');
+              KillProgramme(ExtractFileName(ParamStr(0)));
+            end
+            else exit;
+          end;
+        end;
         Gauge1.MaxValue:= RecordCount;
         Gauge1.MinValue:= 0;
         Gauge1.Progress:= 0;

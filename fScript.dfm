@@ -69,7 +69,7 @@ object ForScript: TForScript
     end
     object Button4: TButton
       Tag = 103
-      Left = 256
+      Left = 248
       Top = 8
       Width = 75
       Height = 25
