@@ -166,7 +166,8 @@ implementation
 
 procedure TForMainM2COMM.InputBoxSetPasswordChar(var Msg: TMessage);
 var
-   hInputForm, hEdit, hButton: HWND;
+   hInputForm, hEdit: HWND;
+   //, hButton: HWND;
 begin
    hInputForm := Screen.Forms[0].Handle;
    if (hInputForm <> 0) then
@@ -485,7 +486,7 @@ begin
           Fichier.Clear;
           if chkMajPxWeb.checked then
             FichierWeb.SaveToFile(FileNameWeb, TEncoding.ASCII);
-          if not file_auto then Fichier.SaveToFile(FileName + '.done');
+          if file_auto then Fichier.SaveToFile(FileName + '.done');
           if not file_auto then ShowMessage('Fichier créé avec succès');
         end
         else if not file_auto then ShowMessage('Abandon');
