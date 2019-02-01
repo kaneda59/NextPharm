@@ -102,7 +102,7 @@ object ForMainM2COMM: TForMainM2COMM
     Visible = False
     object Gauge2: TGauge
       Left = 112
-      Top = 170
+      Top = 166
       Width = 176
       Height = 14
       Progress = 0
@@ -162,9 +162,16 @@ object ForMainM2COMM: TForMainM2COMM
       Caption = '...'
       OnClick = spbDestPrixWebClick
     end
+    object lbl4: TLabel
+      Left = 112
+      Top = 283
+      Width = 112
+      Height = 13
+      Caption = 'Nom du champ lien EAN'
+    end
     object btnQuery: TButton
       Left = 484
-      Top = 158
+      Top = 154
       Width = 75
       Height = 25
       Cursor = crHandPoint
@@ -176,7 +183,7 @@ object ForMainM2COMM: TForMainM2COMM
     end
     object chkMajPxWeb: TCheckBox
       Left = 332
-      Top = 142
+      Top = 138
       Width = 146
       Height = 17
       Caption = 'Mettre '#224' jour les prix web'
@@ -186,7 +193,7 @@ object ForMainM2COMM: TForMainM2COMM
     end
     object cbStockNull: TCheckBox
       Left = 332
-      Top = 165
+      Top = 161
       Width = 129
       Height = 17
       Caption = 'Prendre les stocks '#224' 0'
@@ -195,7 +202,7 @@ object ForMainM2COMM: TForMainM2COMM
     end
     object btnHistorisation: TButton
       Left = 293
-      Top = 140
+      Top = 136
       Width = 23
       Height = 25
       Cursor = crHandPoint
@@ -206,7 +213,7 @@ object ForMainM2COMM: TForMainM2COMM
     end
     object cbTakeOldRef: TCheckBox
       Left = 112
-      Top = 144
+      Top = 140
       Width = 176
       Height = 17
       Cursor = crHandPoint
@@ -250,7 +257,7 @@ object ForMainM2COMM: TForMainM2COMM
     end
     object grp1: TGroupBox
       Left = 112
-      Top = 187
+      Top = 182
       Width = 366
       Height = 95
       Caption = ' Format des '#233'tiquettes '
@@ -306,6 +313,13 @@ object ForMainM2COMM: TForMainM2COMM
         Text = '6'
         OnKeyPress = edtLabelZeroKeyPress
       end
+    end
+    object edLinkEAN: TEdit
+      Left = 240
+      Top = 280
+      Width = 121
+      Height = 21
+      TabOrder = 10
     end
   end
   object Database1: TADOConnection
@@ -892,8 +906,8 @@ object ForMainM2COMM: TForMainM2COMM
     end
   end
   object mmMain: TMainMenu
-    Left = 272
-    Top = 176
+    Left = 288
+    Top = 120
     object MnuOption: TMenuItem
       Caption = '&Options'
       object MnuQuery: TMenuItem

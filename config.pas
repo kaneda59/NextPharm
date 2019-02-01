@@ -18,6 +18,7 @@ type TConfiguration = class
        FFmtLTenDisc: string;
        FFmtMTenDisc: string;
        FMajPxWeb: Boolean;
+       FFieldLinkEAN: string;
        procedure Read;
        procedure Write;
      public
@@ -33,6 +34,7 @@ type TConfiguration = class
        property FmtZeroDisc: string read FFmtZeroDisc write FFmtZeroDisc;
        property FmtLTenDisc: string read FFmtLTenDisc write FFmtLTenDisc;
        property FmtMTenDisc: string read FFmtMTenDisc write FFmtMTenDisc;
+       property FieldLinkEAN: string read FFieldLinkEAN write FFieldLinkEAN;
      end;
 
      var v_config: TConfiguration = nil;
@@ -66,6 +68,9 @@ begin
   FFmtZeroDisc      := Fic.ReadString('config', 'FmtZeroDisc', '0');
   FFmtLTenDisc      := Fic.ReadString('config', 'FmtLTenDisc', '4');
   FFmtMTenDisc      := Fic.ReadString('config', 'FmtMTenDisc', '6');
+  FFieldLinkEAN     := Fic.ReadString('config', 'FieldLinkEAN', 'cnk');
+  if FFieldLinkEAN='' then
+    FFieldLinkEAN:= 'cnk';
 end;
 
 procedure TConfiguration.Write;
@@ -79,6 +84,7 @@ begin
   Fic.WriteString('config', 'FmtZeroDisc', FFmtZeroDisc);
   Fic.WriteString('config', 'FmtLTenDisc', FFmtLTenDisc);
   Fic.WriteString('config', 'FmtMTenDisc', FFmtMTenDisc);
+  Fic.ReadString('config', 'FieldLinkEAN', FFieldLinkEAN);
 end;
 
 initialization

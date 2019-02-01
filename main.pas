@@ -66,6 +66,8 @@ type
     MnuPrixFournisseur: TMenuItem;
     MnuPrixPromo: TMenuItem;
     btnConfig: TSpeedButton;
+    edLinkEAN: TEdit;
+    lbl4: TLabel;
     procedure btnGenerateClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure edDataBaseChange(Sender: TObject);
@@ -316,7 +318,7 @@ begin
           SQL.Add('       , pf.PrixPublic-((pf.PrixPublic*RemisePC)/100) as remisePCTFour');
           SQL.Add('       , pf.PrixPublic-((pf.PrixPublic*pe.PCPromo)/100) as PromoPCTFour');
         end;
-        SQL.Add('FROM tarSpe t LEFT OUTER JOIN AutresCodesBarresSpe g on g.cnk=t.cnk');
+        SQL.Add('FROM tarSpe t LEFT OUTER JOIN AutresCodesBarresSpe g on g.'+v_config.FieldLinkEAN+'=t.cnk');
         SQL.Add('              LEFT OUTER JOIN stock st ON st.cnk=t.cnk');
         SQL.Add('              LEFT OUTER JOIN PromoDetail pd ON pd.valeur=t.cnk');
         SQL.Add('              LEFT OUTER JOIN PromoEntete pe ON pe.idPromoEntete=pd.idPromoEntete');
@@ -610,12 +612,14 @@ begin
   v_config.FmtLTenDisc:= edtLabelLessTen.Text;
   v_config.FmtMTenDisc:= edtLabelMoreTen.Text;
   v_config.MajPxWeb   := chkMajPxWeb.Checked;
+  v_config.FieldLinkEAN:= edLinkEAN.Text;
 end;
 
 procedure TForMainM2COMM.FormCreate(Sender: TObject);
 begin
   Height:= 90;
   CreateLogfile;
+  edLinkEAN.Text       := v_config.FieldLinkEAN;
   edDataBase.Text      := v_config.DataBaseFolder;
   edDestination.Text   := v_config.DestinationFolder;
   edDestPrixWeb.Text   := v_config.DestinationFolderWeb;
