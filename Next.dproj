@@ -116,10 +116,10 @@
         <DCC_DebugInformation>false</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_MinorVer>2</VerInfo_MinorVer>
+        <VerInfo_MinorVer>4</VerInfo_MinorVer>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=Pharmacies de Mons;FileDescription=Logiciel de génération du fichier des étiquettes;FileVersion=1.2.0.0;InternalName=NextPharm Generator M2COMM File;LegalCopyright=Thierry Bosser;LegalTrademarks=FDevelopment;OriginalFilename=Next.exe;ProductName=Next;ProductVersion=1.0.0.0;Comments=ce logiciel privé fonctionne uniquement avec le logiciel NextPharm</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Pharmacies de Mons;FileDescription=Logiciel de génération du fichier des étiquettes;FileVersion=1.4.0.0;InternalName=NextPharm Generator M2COMM File;LegalCopyright=Thierry Bosser;LegalTrademarks=FDevelopment;OriginalFilename=Next.exe;ProductName=Next;ProductVersion=1.0.0.0;Comments=ce logiciel privé fonctionne uniquement avec le logiciel NextPharm</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>

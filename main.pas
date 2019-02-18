@@ -318,7 +318,7 @@ begin
           SQL.Add('       , pf.PrixPublic-((pf.PrixPublic*RemisePC)/100) as remisePCTFour');
           SQL.Add('       , pf.PrixPublic-((pf.PrixPublic*pe.PCPromo)/100) as PromoPCTFour');
         end;
-        SQL.Add('FROM tarSpe t LEFT OUTER JOIN AutresCodesBarresSpe g on g.'+v_config.FieldLinkEAN+'=t.cnk');
+        SQL.Add('FROM tarSpe t LEFT OUTER JOIN AutresCodesBarresSpe g on g.'+edLinkEAN.Text+'=t.cnk');
         SQL.Add('              LEFT OUTER JOIN stock st ON st.cnk=t.cnk');
         SQL.Add('              LEFT OUTER JOIN PromoDetail pd ON pd.valeur=t.cnk');
         SQL.Add('              LEFT OUTER JOIN PromoEntete pe ON pe.idPromoEntete=pd.idPromoEntete');
@@ -404,9 +404,9 @@ begin
                 OutputDebugString(pchar('promo en %'));
                 PrixRemise:= FieldByName(FieldPromoName).AsFloat;
                 if FieldByName(FieldPromoName).AsFloat>10 then
-                  formatEtiquette:= '3';
+                  formatEtiquette:= default(edtLabelMoreTen.Text, '6');//'3';
                 if FieldByName(FieldPromoName).AsFloat<=10 then
-                  formatEtiquette:= '4';
+                  formatEtiquette:= default(edtLabelLessTen.Text, '4');//'4';
               end
               else
               if FieldByName('MontantPromo').AsFloat<>0 then
