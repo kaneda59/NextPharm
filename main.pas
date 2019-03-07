@@ -226,6 +226,11 @@ var Fichier: TStringList;
     FieldPromoName     : string;
     Suffix: string;
 
+    RemiseAppliquee: array of double; // contient tous les prix de remises appliquées,
+                                      // on tri ensuite ce tableau par ordre croissant,
+                                      // la remise la plus intéressante est alors appliquée
+                                      // une remise est > 0
+
     function DecimalStr(const value: string): string;
     begin
       result:= value;
@@ -274,10 +279,45 @@ var Fichier: TStringList;
       end;
     end;
 
+    procedure SortArray(var tab: array of double);
+    var bis, i, j, k: LongInt;
+        h: double;
+    begin
+      bis := High(tab);
+      k := bis shr 1;
+      while k > 0 do
+      begin
+        for i := 0 to bis - k do
+        begin
+          j := i;
+          while (j >= 0) and (tab[j] > tab[j + k]) do
+          begin
+            h := tab[j];
+            tab[j] := tab[j + k];
+            tab[j + k] := h;
+            if j > k then
+                 Dec(j, k)
+            else j := 0;
+          end;
+         end;
+         k := k shr 1;
+       end;
+    end;
+
+    procedure AddRemise(const value: double);
+    begin
+      if Value>0 then
+      begin
+        SetLength(RemiseAppliquee, Length(RemiseAppliquee)+1);
+        RemiseAppliquee[High(RemiseAppliquee)]:= value;
+      end;
+    end;
+
 begin
   if file_auto or (MessageDLG('Voulez-vous générer le fichier des étiquettes ?', mtConfirmation, [mbYes, mbNo], 0)=mrYes) then
   begin
     try
+      SetLength(RemiseAppliquee, 0);
       ListFour:= TStringList.Create;
       Pause:= False;
       btnPause.Enabled:= True;
@@ -305,11 +345,12 @@ begin
             WriteToLog('erreur lors de la récupération des règles fournisseurs : ' + e.Message);
         end;
 
-        SQL.Add('SELECT t.CNK as code,LibF,LibN,t.PrixPublic,t.PrixPublic-((t.PrixPublic*RemisePC)/100) as remisePCT,');
+        SQL.Add('SELECT t.CNK as code,t.LibF,t.LibN,t.PrixPublic,t.PrixPublic-((t.PrixPublic*RemisePC)/100) as remisePCT,');
         SQL.Add('       (t.PrixPublic-RemisePC) as RemisePx, t.PrixAchat, TypeRemise, st.StkRayon, st.stkCave, g.CodeBarre, RemisePC,');
         SQL.Add('       t.catAPBProd, t.Legislation, t.TempConservation, t.CodeLabo, t.pcTVA, t.Usage,');
         SQL.Add('       pe.DateDébutPromo, pe.DateFinPromo, pe.QtTotalePromo, pe.QtRestantePromo,');
-        SQL.Add('       t.PrixPublic-((t.PrixPublic*pe.PCPromo)/100) as PromoPCT, pe.MontantPromo');
+        SQL.Add('       t.PrixPublic-((t.PrixPublic*pe.PCPromo)/100) as PromoPCT, pe.MontantPromo, ');
+        SQL.Add('       pfd.Pourcent, t.idProfilRem');
         if strIdFour<>'' then
         begin
           SQL.Add('       , pf.NumFour as NumFour');
@@ -322,6 +363,9 @@ begin
         SQL.Add('              LEFT OUTER JOIN stock st ON st.cnk=t.cnk');
         SQL.Add('              LEFT OUTER JOIN PromoDetail pd ON pd.valeur=t.cnk');
         SQL.Add('              LEFT OUTER JOIN PromoEntete pe ON pe.idPromoEntete=pd.idPromoEntete');
+        SQL.Add('              LEFT OUTER JOIN ProfilsRemRistEnt pfe ON pfe.idProfilsRemRistEnt=t.idProfilRem');
+        SQL.Add('              LEFT OUTER JOIN ProfilsRemRistDet pfd ON pfd.idProfilsRemRistEnt=pfe.idProfilsRemRistEnt');
+        SQL.Add('              AND t.CodeLabo=pfd.CodeLabo');
         if strIdFour<>'' then
           SQL.Add('              LEFT OUTER JOIN TarPrixFour pf ON pf.cnk=t.cnk and pf.NumFour in ('+strIdFour+')');
         SQL.Add('WHERE PrixPublic>0');
@@ -363,6 +407,7 @@ begin
               FieldRemisePCTName := 'remisePCT';
               FieldPromoName     := 'PromoPCT';
             end;
+
             formatEtiquette:= default(edtLabelZero.Text, '0');
             if FieldByName('TypeRemise').AsInteger=3 then
             begin
@@ -384,6 +429,8 @@ begin
               if FieldByName('TypeRemise').AsInteger=5 then
                 PrixRemise:= FieldByName(FieldRemisePxName).AsFloat
               else PrixRemise:= 0;
+
+              AddRemise(PrixRemise);
             end;
 
             if  ( // test de la date de promo
@@ -407,12 +454,15 @@ begin
                   formatEtiquette:= default(edtLabelMoreTen.Text, '6');//'3';
                 if FieldByName(FieldPromoName).AsFloat<=10 then
                   formatEtiquette:= default(edtLabelLessTen.Text, '4');//'4';
+
+                AddRemise(PrixRemise);
               end
               else
               if FieldByName('MontantPromo').AsFloat<>0 then
               begin
                 OutputDebugString(pchar('promo en montant'));
                 PrixRemise:= FieldByName('MontantPromo').AsFloat;
+                AddRemise(PrixRemise);
     //            if FieldByName('PromoPCT').AsFloat<>0 then
     //            begin
     //              if FieldByName('PromoPCT').AsFloat>10 then
@@ -423,6 +473,24 @@ begin
               end
               else outputdebugstring('aucune promo pour ce produit');
             end;
+
+            if FieldByName('idProfilRem').AsInteger<>0 then
+            begin
+              PrixRemise:= FieldByName('PrixPublic').AsFloat-
+                           ((FieldByName('PrixPublic').AsFloat*
+                             FieldByName('Pourcent').AsFloat)/100);
+              if FieldByName('Pourcent').AsFloat>10 then
+                  formatEtiquette:= default(edtLabelMoreTen.Text, '6');//'3';
+                if FieldByName('Pourcent').AsFloat<=10 then
+                  formatEtiquette:= default(edtLabelLessTen.Text, '4');//'4';
+
+              AddRemise(PrixRemise);
+            end;
+
+            SortArray(RemiseAppliquee);
+            if Length(RemiseAppliquee)>0 then
+              PrixRemise:= RemiseAppliquee[Low(RemiseAppliquee)];
+
 
             (*  Fichier MAJ WEB
             Cnk ; libellé F ; libellé N ; Catégorie APB ; Code législation ; Prix public (TvaC)
